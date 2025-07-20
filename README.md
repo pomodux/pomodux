@@ -2,6 +2,8 @@
 
 A powerful terminal-based timer and Pomodoro application built in Go, designed for productivity and time management.
 
+Adding this as a test.
+
 ## 🚀 Current Status
 
 **Release 0.1.0** ✅ **COMPLETE** - Foundation and Core Timer Engine released on 2025-07-26  
