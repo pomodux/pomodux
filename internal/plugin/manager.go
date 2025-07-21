@@ -108,30 +108,6 @@ func (pm *PluginManager) warnLegacyPlugins() error {
 	return nil
 }
 
-// Helper: Determine if a plugin is enabled in config
-func (pm *PluginManager) isPluginEnabled(pluginName string) bool {
-	enabled := true
-	if pm.config != nil {
-		if pm.config.PluginsRaw != nil {
-			if pluginSection, ok := pm.config.PluginsRaw[pluginName]; ok {
-				if pluginMap, ok := pluginSection.(map[string]interface{}); ok {
-					if enabledVal, ok := pluginMap["enabled"]; ok {
-						if b, ok := enabledVal.(bool); ok {
-							enabled = b
-						}
-					}
-				}
-			}
-		}
-		if pm.config.Plugins.Enabled != nil {
-			if enabledState, exists := pm.config.Plugins.Enabled[pluginName]; exists {
-				enabled = enabledState
-			}
-		}
-	}
-	return enabled
-}
-
 // Helper: Check if plugin file exists
 func pluginFileExists(pluginFile string) bool {
 	stat, err := os.Stat(pluginFile)
@@ -139,22 +115,21 @@ func pluginFileExists(pluginFile string) bool {
 }
 
 func (pm *PluginManager) loadPluginsFromConfig() error {
-	pluginNames := make([]string, 0)
-	if pm.config != nil && pm.config.PluginsRaw != nil {
-		for key := range pm.config.PluginsRaw {
-			if key == "directory" {
-				continue
+	// Get enabled plugins from the config
+	enabledPlugins := make([]string, 0)
+	if pm.config != nil && pm.config.Plugins.Enabled != nil {
+		for pluginName, enabled := range pm.config.Plugins.Enabled {
+			if enabled {
+				enabledPlugins = append(enabledPlugins, pluginName)
 			}
-			pluginNames = append(pluginNames, key)
 		}
 	}
-	for _, pluginName := range pluginNames {
+
+	// Load each enabled plugin
+	for _, pluginName := range enabledPlugins {
 		pluginDir := filepath.Join(pm.pluginsDir, pluginName)
 		pluginFile := filepath.Join(pluginDir, "plugin.lua")
-		if !pm.isPluginEnabled(pluginName) {
-			logger.Info("Skipping disabled plugin", map[string]interface{}{"plugin": pluginName})
-			continue
-		}
+
 		if pluginFileExists(pluginFile) {
 			if err := pm.LoadPluginFromFile(pluginFile); err != nil {
 				logger.Warn("Failed to load plugin", map[string]interface{}{"path": pluginFile, "error": err.Error()})
@@ -197,9 +172,13 @@ func (pm *PluginManager) LoadPluginFromFile(filePath string) error {
 		return fmt.Errorf("failed to read plugin file %s: %w", filePath, err)
 	}
 
-	// Extract plugin name from filename
+	// Extract plugin name from parent directory if file is named plugin.lua
 	pluginName := filepath.Base(filePath)
-	pluginName = pluginName[:len(pluginName)-4] // Remove .lua extension
+	if pluginName == "plugin.lua" {
+		pluginName = filepath.Base(filepath.Dir(filePath))
+	} else {
+		pluginName = pluginName[:len(pluginName)-4] // Remove .lua extension
+	}
 	return pm.LoadPlugin(pluginName, string(content))
 }
 

@@ -134,23 +134,24 @@ end)
 
 func TestLoadPlugins(t *testing.T) {
 	pluginsDir := t.TempDir()
-	// Provide a config with PluginsRaw listing the plugin names
-	pluginNames := []string{"plugin1", "plugin2"}
-	pluginsRaw := map[string]interface{}{}
-	for _, name := range pluginNames {
-		pluginsRaw[name] = map[string]interface{}{"enabled": true}
+
+	// Provide a config with Plugins.Enabled listing the plugin names
+	pluginsEnabled := map[string]bool{
+		"plugin1": true,
+		"plugin2": true,
 	}
-	cfg := &config.Config{PluginsRaw: pluginsRaw}
+	cfg := &config.Config{}
+	cfg.Plugins.Enabled = pluginsEnabled
 	pm := NewPluginManager(pluginsDir, cfg)
 	defer pm.Shutdown()
 
-	// Create multiple test plugin files
+	// Define test plugins
 	plugins := []struct {
 		name string
 		code string
 	}{
 		{
-			name: "plugin1.lua",
+			name: "plugin1",
 			code: `
 pomodux.register_plugin({
     name = "plugin1",
@@ -161,7 +162,7 @@ pomodux.register_plugin({
 `,
 		},
 		{
-			name: "plugin2.lua",
+			name: "plugin2",
 			code: `
 pomodux.register_plugin({
     name = "plugin2",
@@ -171,16 +172,17 @@ pomodux.register_plugin({
 })
 `,
 		},
-		{
-			name: "not_a_plugin.txt", // Should be ignored
-			code: "This is not a plugin",
-		},
 	}
 
-	// Write plugin files in the pluginsDir root
+	// Write plugin files in subdirectories with plugin.lua
 	for _, p := range plugins {
-		pluginFile := filepath.Join(pluginsDir, p.name)
-		err := os.WriteFile(pluginFile, []byte(p.code), 0644)
+		pluginDir := filepath.Join(pluginsDir, p.name)
+		err := os.MkdirAll(pluginDir, 0755)
+		if err != nil {
+			t.Fatalf("Failed to create plugin directory %s: %v", pluginDir, err)
+		}
+		pluginFile := filepath.Join(pluginDir, "plugin.lua")
+		err = os.WriteFile(pluginFile, []byte(p.code), 0644)
 		if err != nil {
 			t.Fatalf("Failed to write plugin file %s: %v", pluginFile, err)
 		}

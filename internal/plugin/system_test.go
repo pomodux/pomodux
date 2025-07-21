@@ -13,22 +13,22 @@ import (
 
 func TestPluginSystem_FileLoading(t *testing.T) {
 	pluginsDir := t.TempDir()
-	// Provide a config with PluginsRaw listing the plugin name
-	pluginsRaw := map[string]interface{}{"test_plugin": map[string]interface{}{"enabled": true}}
-	cfg := &config.Config{PluginsRaw: pluginsRaw}
+
+	// Provide a config with Plugins.Enabled listing the plugin name
+	pluginsEnabled := map[string]bool{"test_plugin": true}
+	cfg := &config.Config{}
+	cfg.Plugins.Enabled = pluginsEnabled
 	pm := NewPluginManager(pluginsDir, cfg)
 	defer pm.Shutdown()
 
 	// Create a test plugin file in a subdirectory
 	pluginDir := filepath.Join(pluginsDir, "test_plugin")
 	err := os.MkdirAll(pluginDir, 0755)
-	if err != nil {
-		t.Fatalf("Failed to create plugin directory: %v", err)
-	}
+	require.NoError(t, err)
 	pluginFile := filepath.Join(pluginDir, "plugin.lua")
 	pluginCode := `
 pomodux.register_plugin({
-    name = "test_plugin",
+    name = "plugin",
     version = "1.0.0",
     description = "Test plugin for file loading",
     author = "Test Author"
@@ -127,7 +127,15 @@ end)
 
 func TestPluginSystem_PluginManagement(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir, nil)
+
+	// Provide a config with Plugins.Enabled listing the plugin names
+	pluginsEnabled := map[string]bool{
+		"plugin1": true,
+		"plugin2": true,
+	}
+	cfg := &config.Config{}
+	cfg.Plugins.Enabled = pluginsEnabled
+	pm := NewPluginManager(pluginsDir, cfg)
 	defer pm.Shutdown()
 
 	// Create multiple test plugins
@@ -136,7 +144,7 @@ func TestPluginSystem_PluginManagement(t *testing.T) {
 		code string
 	}{
 		{
-			name: "plugin1.lua",
+			name: "plugin1",
 			code: `
 pomodux.register_plugin({
     name = "plugin1",
@@ -147,7 +155,7 @@ pomodux.register_plugin({
 `,
 		},
 		{
-			name: "plugin2.lua",
+			name: "plugin2",
 			code: `
 pomodux.register_plugin({
     name = "plugin2",
@@ -159,10 +167,13 @@ pomodux.register_plugin({
 		},
 	}
 
-	// Create plugin files
+	// Create plugin files in subdirectories with plugin.lua
 	for _, p := range plugins {
-		pluginFile := filepath.Join(pluginsDir, p.name)
-		err := os.WriteFile(pluginFile, []byte(p.code), 0644)
+		pluginDir := filepath.Join(pluginsDir, p.name)
+		err := os.MkdirAll(pluginDir, 0755)
+		require.NoError(t, err)
+		pluginFile := filepath.Join(pluginDir, "plugin.lua")
+		err = os.WriteFile(pluginFile, []byte(p.code), 0644)
 		require.NoError(t, err)
 	}
 
@@ -284,10 +295,18 @@ end)
 
 func TestPluginSystem_Shutdown(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir, nil)
 
-	// Create and load a plugin
-	pluginFile := filepath.Join(pluginsDir, "shutdown_test.lua")
+	// Provide a config with Plugins.Enabled listing the plugin name
+	pluginsEnabled := map[string]bool{"shutdown_test": true}
+	cfg := &config.Config{}
+	cfg.Plugins.Enabled = pluginsEnabled
+	pm := NewPluginManager(pluginsDir, cfg)
+
+	// Create and load a plugin in a subdirectory
+	pluginDir := filepath.Join(pluginsDir, "shutdown_test")
+	err := os.MkdirAll(pluginDir, 0755)
+	require.NoError(t, err)
+	pluginFile := filepath.Join(pluginDir, "plugin.lua")
 	pluginCode := `
 pomodux.register_plugin({
     name = "shutdown_test",
@@ -297,7 +316,7 @@ pomodux.register_plugin({
 })
 `
 
-	err := os.WriteFile(pluginFile, []byte(pluginCode), 0644)
+	err = os.WriteFile(pluginFile, []byte(pluginCode), 0644)
 	require.NoError(t, err)
 
 	err = pm.LoadPlugins()
