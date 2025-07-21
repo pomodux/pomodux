@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,20 +102,32 @@ func (pm *PluginManager) LoadPlugins() error {
 		return fmt.Errorf("failed to create plugins directory: %w", err)
 	}
 
-	// Walk through plugins directory
-	return filepath.WalkDir(pm.pluginsDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
+	// 1. Log warning for any .lua files in the root of the plugins directory (legacy plugins)
+	entries, err := os.ReadDir(pm.pluginsDir)
+	if err != nil {
+		return fmt.Errorf("failed to read plugins directory: %w", err)
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".lua") {
+			logger.Warn("Legacy plugin file found in root of plugins directory (ignored under new structure)", map[string]interface{}{"file": entry.Name()})
 		}
+	}
 
-		// Skip directories and non-lua files
-		if d.IsDir() || filepath.Ext(path) != ".lua" {
-			return nil
+	// 2. Determine plugin names from config (PluginsRaw keys, excluding 'directory')
+	pluginNames := make([]string, 0)
+	if pm.config != nil && pm.config.PluginsRaw != nil {
+		for key := range pm.config.PluginsRaw {
+			if key == "directory" {
+				continue
+			}
+			pluginNames = append(pluginNames, key)
 		}
+	}
 
-		// Extract plugin name from filename
-		pluginName := filepath.Base(path)
-		pluginName = pluginName[:len(pluginName)-4] // Remove .lua extension
+	// 3. For each plugin name, look for a subfolder and load plugin.lua if enabled
+	for _, pluginName := range pluginNames {
+		pluginDir := filepath.Join(pm.pluginsDir, pluginName)
+		pluginFile := filepath.Join(pluginDir, "plugin.lua")
 
 		// Check if plugin is enabled in configuration BEFORE loading
 		enabled := true // Default to enabled
@@ -142,18 +153,21 @@ func (pm *PluginManager) LoadPlugins() error {
 		}
 		if !enabled {
 			logger.Info("Skipping disabled plugin", map[string]interface{}{"plugin": pluginName})
-			return nil
+			continue
 		}
 
-		// Load the plugin
-		if err := pm.LoadPluginFromFile(path); err != nil {
-			fmt.Printf("❌ Failed to load plugin %s: %v\n", filepath.Base(path), err)
-			logger.Warn("Failed to load plugin", map[string]interface{}{"path": path, "error": err.Error()})
-			return nil // Continue loading other plugins
+		// Only load if pluginDir exists and plugin.lua exists
+		if stat, err := os.Stat(pluginFile); err == nil && !stat.IsDir() {
+			if err := pm.LoadPluginFromFile(pluginFile); err != nil {
+				logger.Warn("Failed to load plugin", map[string]interface{}{"path": pluginFile, "error": err.Error()})
+				continue // Continue loading other plugins
+			}
+		} else {
+			logger.Warn("Plugin folder or plugin.lua missing for plugin (skipped)", map[string]interface{}{"plugin": pluginName, "expected_path": pluginFile})
 		}
+	}
 
-		return nil
-	})
+	return nil
 }
 
 // LoadPluginFromFile loads a plugin from a Lua file

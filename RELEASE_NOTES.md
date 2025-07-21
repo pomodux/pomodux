@@ -477,3 +477,11 @@ We welcome contributions! Please see our contributing guidelines and development
 **Release Manager**: AI Assistant  
 **Build Date**: July 26, 2025  
 **Support**: [GitHub Issues](https://github.com/rsmacapinlac/pomodux/issues) 
+
+## 0.4.1 (2025-07-21)
+
+- Major plugin loader refactor: only loads plugins from subfolders, only `plugin.lua` in each.
+- Legacy plugin warning: logs if `.lua` files are found in the root of the plugins directory.
+- Kimai plugin: improved project/activity selection, < Back> navigation, robust timer sync.
+- All backend/plugin status, warning, and error output routed through logger.
+- Documentation and migration instructions updated. See `docs/releases/release-0.4.1.md` for full details. 
