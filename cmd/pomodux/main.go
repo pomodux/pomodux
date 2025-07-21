@@ -12,7 +12,7 @@ import (
 )
 
 // Version will be set during build time via ldflags
-var Version = "dev"
+var Version = "0.3.2"
 
 func main() {
 	// Get config file path from flag (will be parsed during Execute)
