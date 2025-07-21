@@ -506,7 +506,9 @@ func (pm *PluginManager) processEvents() {
 	for {
 		select {
 		case event := <-pm.events:
-			pm.callPluginHooks(event)
+			if err := pm.callPluginHooks(event); err != nil {
+				logger.Warn("Plugin hook error", map[string]interface{}{"error": err.Error()})
+			}
 		case <-pm.done:
 			return
 		}
