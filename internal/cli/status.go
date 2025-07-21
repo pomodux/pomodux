@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/logger"
-	"github.com/rsmacapinlac/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/timer"
 	"github.com/spf13/cobra"
 )
 

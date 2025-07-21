@@ -18,7 +18,7 @@ linters-settings:
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/rsmacapinlac/pomodux
+    local-prefixes: github.com/pomodux/pomodux
   gocritic:
     enabled-tags:
       - diagnostic

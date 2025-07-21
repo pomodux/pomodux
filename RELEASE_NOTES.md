@@ -257,7 +257,7 @@ Pomodux 0.1.0 is the initial release that establishes the foundation for a power
 
 ```bash
 # Clone the repository
-git clone https://github.com/rsmacapinlac/pomodux.git
+git clone https://github.com/pomodux/pomodux.git
 cd pomodux
 
 # Build the application
@@ -476,7 +476,7 @@ We welcome contributions! Please see our contributing guidelines and development
 
 **Release Manager**: AI Assistant  
 **Build Date**: July 26, 2025  
-**Support**: [GitHub Issues](https://github.com/rsmacapinlac/pomodux/issues) 
+**Support**: [GitHub Issues](https://github.com/pomodux/pomodux/issues) 
 
 ## 0.4.1 (2025-07-21)
 

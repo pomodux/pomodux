@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/config"
-	"github.com/rsmacapinlac/pomodux/internal/plugin"
-	"github.com/rsmacapinlac/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/plugin"
+	"github.com/pomodux/pomodux/internal/timer"
 	"github.com/spf13/cobra"
 )
 

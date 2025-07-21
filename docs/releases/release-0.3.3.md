@@ -73,7 +73,7 @@ The stop command properly integrates with the plugin system:
 
 ### From Source
 ```bash
-git clone https://github.com/rsmacapinlac/pomodux.git
+git clone https://github.com/pomodux/pomodux.git
 cd pomodux
 git checkout v0.3.3
 make build

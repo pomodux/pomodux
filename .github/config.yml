@@ -5,5 +5,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Pomodux Documentation
-    url: https://github.com/rsmacapinlac/pomodux/tree/main/docs
+    url: https://github.com/pomodux/pomodux/tree/main/docs
     about: Please check the documentation before creating an issue. 

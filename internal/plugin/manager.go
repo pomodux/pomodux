@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/config"
-	"github.com/rsmacapinlac/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/logger"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -187,7 +187,6 @@ func (pm *PluginManager) LoadPluginFromFile(filePath string) error {
 	// Extract plugin name from filename
 	pluginName := filepath.Base(filePath)
 	pluginName = pluginName[:len(pluginName)-4] // Remove .lua extension
-
 	return pm.LoadPlugin(pluginName, string(content))
 }
 

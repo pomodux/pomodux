@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/config"
 	"github.com/spf13/cobra"
 )
 

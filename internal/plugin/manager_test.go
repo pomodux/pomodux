@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/logger"
 )
 
 // TestMain initializes the logger for all tests in this package
@@ -28,7 +29,7 @@ func TestMain(m *testing.M) {
 
 func TestNewPluginManager(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 
 	if pm == nil {
 		t.Fatal("NewPluginManager returned nil")
@@ -44,7 +45,7 @@ func TestNewPluginManager(t *testing.T) {
 
 func TestLoadPlugin(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Test plugin code
@@ -91,7 +92,7 @@ end)
 
 func TestLoadPluginFromFile(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Create a test plugin file
@@ -133,7 +134,14 @@ end)
 
 func TestLoadPlugins(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	// Provide a config with PluginsRaw listing the plugin names
+	pluginNames := []string{"plugin1", "plugin2"}
+	pluginsRaw := map[string]interface{}{}
+	for _, name := range pluginNames {
+		pluginsRaw[name] = map[string]interface{}{"enabled": true}
+	}
+	cfg := &config.Config{PluginsRaw: pluginsRaw}
+	pm := NewPluginManager(pluginsDir, cfg)
 	defer pm.Shutdown()
 
 	// Create multiple test plugin files
@@ -169,12 +177,12 @@ pomodux.register_plugin({
 		},
 	}
 
-	// Write plugin files
+	// Write plugin files in the pluginsDir root
 	for _, p := range plugins {
 		pluginFile := filepath.Join(pluginsDir, p.name)
 		err := os.WriteFile(pluginFile, []byte(p.code), 0644)
 		if err != nil {
-			t.Fatalf("Failed to write plugin file %s: %v", p.name, err)
+			t.Fatalf("Failed to write plugin file %s: %v", pluginFile, err)
 		}
 	}
 
@@ -212,7 +220,7 @@ pomodux.register_plugin({
 
 func TestEmitEvent(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Create a test plugin that logs events
@@ -255,7 +263,7 @@ end)
 
 func TestEnableDisablePlugin(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Load a test plugin
@@ -308,7 +316,7 @@ pomodux.register_plugin({
 
 func TestUnloadPlugin(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Load a test plugin
@@ -347,7 +355,7 @@ pomodux.register_plugin({
 
 func TestInvalidPlugin(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Test plugin without registration
@@ -364,7 +372,7 @@ print("Hello world")
 
 func TestDuplicatePlugin(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Load the same plugin twice

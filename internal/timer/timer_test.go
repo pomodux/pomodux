@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/logger"
 )
 
 // TestMain initializes the logger for all tests in this package

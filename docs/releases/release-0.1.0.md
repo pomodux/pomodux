@@ -147,7 +147,7 @@ Release 0.1.0 has successfully completed all 4 approval gates and is now officia
 ### Installation Instructions
 ```bash
 # Clone the repository
-git clone https://github.com/rsmacapinlac/pomodux.git
+git clone https://github.com/pomodux/pomodux.git
 cd pomodux
 
 # Build the application
@@ -230,7 +230,7 @@ Timer state is automatically saved to:
 ### Installation
 ```bash
 # Build from source
-git clone https://github.com/rsmacapinlac/pomodux.git
+git clone https://github.com/pomodux/pomodux.git
 cd pomodux
 make build
 ./bin/pomodux start 25m

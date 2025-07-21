@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/rsmacapinlac/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/timer"
 	"github.com/spf13/cobra"
 )
 

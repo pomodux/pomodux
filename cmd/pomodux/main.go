@@ -5,10 +5,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rsmacapinlac/pomodux/internal/cli"
-	"github.com/rsmacapinlac/pomodux/internal/config"
-	"github.com/rsmacapinlac/pomodux/internal/logger"
-	"github.com/rsmacapinlac/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/cli"
+	"github.com/pomodux/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/timer"
 )
 
 // Version will be set during build time via ldflags

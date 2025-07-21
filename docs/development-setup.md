@@ -34,7 +34,7 @@ export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/rsmacapinlac/pomodux.git
+   git clone https://github.com/pomodux/pomodux.git
    cd pomodux
    ```
 

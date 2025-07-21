@@ -13,8 +13,8 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/rsmacapinlac/pomodux/internal/logger"
-	"github.com/rsmacapinlac/pomodux/internal/plugin"
+	"github.com/pomodux/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/plugin"
 )
 
 // Timer represents a timer instance

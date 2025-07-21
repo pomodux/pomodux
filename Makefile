@@ -24,7 +24,7 @@ BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 # Build the application
 build:
 	@echo "Building pomodux..."
-	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.Version=$(VERSION)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.BuildDate=$(BUILD_DATE)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.Commit=$(GIT_COMMIT)'" -o bin/pomodux cmd/pomodux/main.go
+	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'github.com/pomodux/pomodux/internal/cli.Version=$(VERSION)' -X 'github.com/pomodux/pomodux/internal/cli.BuildDate=$(BUILD_DATE)' -X 'github.com/pomodux/pomodux/internal/cli.Commit=$(GIT_COMMIT)'" -o bin/pomodux cmd/pomodux/main.go
 	@echo "Build complete: bin/pomodux"
 	@bin/pomodux --help > /dev/null 2>&1 && echo "Build verification successful!" || echo "Build verification successful! (help requested)"
 

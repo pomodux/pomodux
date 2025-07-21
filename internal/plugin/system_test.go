@@ -6,18 +6,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rsmacapinlac/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPluginSystem_FileLoading(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	// Provide a config with PluginsRaw listing the plugin name
+	pluginsRaw := map[string]interface{}{"test_plugin": map[string]interface{}{"enabled": true}}
+	cfg := &config.Config{PluginsRaw: pluginsRaw}
+	pm := NewPluginManager(pluginsDir, cfg)
 	defer pm.Shutdown()
 
-	// Create a test plugin file
-	pluginFile := filepath.Join(pluginsDir, "test_plugin.lua")
+	// Create a test plugin file in a subdirectory
+	pluginDir := filepath.Join(pluginsDir, "test_plugin")
+	err := os.MkdirAll(pluginDir, 0755)
+	if err != nil {
+		t.Fatalf("Failed to create plugin directory: %v", err)
+	}
+	pluginFile := filepath.Join(pluginDir, "plugin.lua")
 	pluginCode := `
 pomodux.register_plugin({
     name = "test_plugin",
@@ -35,7 +43,7 @@ pomodux.register_hook("timer_completed", function(event)
 end)
 `
 
-	err := os.WriteFile(pluginFile, []byte(pluginCode), 0644)
+	err = os.WriteFile(pluginFile, []byte(pluginCode), 0644)
 	require.NoError(t, err)
 
 	// Load plugins from directory
@@ -58,7 +66,7 @@ end)
 
 func TestPluginSystem_EventEmission(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Create a test plugin that logs events
@@ -119,7 +127,7 @@ end)
 
 func TestPluginSystem_PluginManagement(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Create multiple test plugins
@@ -193,7 +201,7 @@ pomodux.register_plugin({
 
 func TestPluginSystem_InvalidPlugins(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Test plugin without registration
@@ -220,7 +228,7 @@ func TestPluginSystem_ConfigBasedDirectory(t *testing.T) {
 	cfg := config.DefaultConfig()
 	pluginsDir := cfg.Plugins.Directory
 
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Verify the plugin manager uses the config directory
@@ -229,7 +237,7 @@ func TestPluginSystem_ConfigBasedDirectory(t *testing.T) {
 
 func TestPluginSystem_ConcurrentEventEmission(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Create a test plugin
@@ -276,7 +284,7 @@ end)
 
 func TestPluginSystem_Shutdown(t *testing.T) {
 	pluginsDir := t.TempDir()
-	pm := NewPluginManager(pluginsDir)
+	pm := NewPluginManager(pluginsDir, nil)
 
 	// Create and load a plugin
 	pluginFile := filepath.Join(pluginsDir, "shutdown_test.lua")
