@@ -108,7 +108,36 @@ func (pm *PluginManager) warnLegacyPlugins() error {
 	return nil
 }
 
-// Helper: Load plugins from config
+// Helper: Determine if a plugin is enabled in config
+func (pm *PluginManager) isPluginEnabled(pluginName string) bool {
+	enabled := true
+	if pm.config != nil {
+		if pm.config.PluginsRaw != nil {
+			if pluginSection, ok := pm.config.PluginsRaw[pluginName]; ok {
+				if pluginMap, ok := pluginSection.(map[string]interface{}); ok {
+					if enabledVal, ok := pluginMap["enabled"]; ok {
+						if b, ok := enabledVal.(bool); ok {
+							enabled = b
+						}
+					}
+				}
+			}
+		}
+		if pm.config.Plugins.Enabled != nil {
+			if enabledState, exists := pm.config.Plugins.Enabled[pluginName]; exists {
+				enabled = enabledState
+			}
+		}
+	}
+	return enabled
+}
+
+// Helper: Check if plugin file exists
+func pluginFileExists(pluginFile string) bool {
+	stat, err := os.Stat(pluginFile)
+	return err == nil && !stat.IsDir()
+}
+
 func (pm *PluginManager) loadPluginsFromConfig() error {
 	pluginNames := make([]string, 0)
 	if pm.config != nil && pm.config.PluginsRaw != nil {
@@ -122,34 +151,11 @@ func (pm *PluginManager) loadPluginsFromConfig() error {
 	for _, pluginName := range pluginNames {
 		pluginDir := filepath.Join(pm.pluginsDir, pluginName)
 		pluginFile := filepath.Join(pluginDir, "plugin.lua")
-		// Check if plugin is enabled in configuration BEFORE loading
-		enabled := true // Default to enabled
-		if pm.config != nil {
-			// New style: plugin-specific sub-object
-			if pm.config.PluginsRaw != nil {
-				if pluginSection, ok := pm.config.PluginsRaw[pluginName]; ok {
-					if pluginMap, ok := pluginSection.(map[string]interface{}); ok {
-						if enabledVal, ok := pluginMap["enabled"]; ok {
-							if b, ok := enabledVal.(bool); ok {
-								enabled = b
-							}
-						}
-					}
-				}
-			}
-			// Old style: enabled map
-			if pm.config.Plugins.Enabled != nil {
-				if enabledState, exists := pm.config.Plugins.Enabled[pluginName]; exists {
-					enabled = enabledState
-				}
-			}
-		}
-		if !enabled {
+		if !pm.isPluginEnabled(pluginName) {
 			logger.Info("Skipping disabled plugin", map[string]interface{}{"plugin": pluginName})
 			continue
 		}
-		// Only load if pluginDir exists and plugin.lua exists
-		if stat, err := os.Stat(pluginFile); err == nil && !stat.IsDir() {
+		if pluginFileExists(pluginFile) {
 			if err := pm.LoadPluginFromFile(pluginFile); err != nil {
 				logger.Warn("Failed to load plugin", map[string]interface{}{"path": pluginFile, "error": err.Error()})
 				continue // Continue loading other plugins
@@ -813,7 +819,7 @@ func ShowEnhancedListSelection(title string, items []ListItem) (int, bool) {
 	list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		logger.Debug(fmt.Sprintf("[TUI] Key pressed: %v", event.Key()))
 		if event.Key() == tcell.KeyEscape {
-			logger.Debug("[TUI] User pressed Escape - cancelling selection")
+			logger.Debug("[TUI] User pressed Escape - canceling selection")
 			app.Stop()
 			return nil
 		}
