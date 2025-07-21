@@ -20,7 +20,7 @@ import (
 type CancellationError struct{}
 
 func (e CancellationError) Error() string {
-	return "timer setup cancelled by user"
+	return "timer setup canceled by user"
 }
 
 // IsCancellationError checks if an error is a cancellation error
@@ -94,15 +94,8 @@ func NewPluginManager(pluginsDir string, config *config.Config) *PluginManager {
 	return pm
 }
 
-// LoadPlugins loads all plugins from the plugins directory
-func (pm *PluginManager) LoadPlugins() error {
-	logger.Debug("[PLUGIN] Loading plugins from directory: " + pm.pluginsDir)
-	// Create plugins directory if it doesn't exist
-	if err := os.MkdirAll(pm.pluginsDir, 0750); err != nil {
-		return fmt.Errorf("failed to create plugins directory: %w", err)
-	}
-
-	// 1. Log warning for any .lua files in the root of the plugins directory (legacy plugins)
+// Helper: Warn about legacy plugins
+func (pm *PluginManager) warnLegacyPlugins() error {
 	entries, err := os.ReadDir(pm.pluginsDir)
 	if err != nil {
 		return fmt.Errorf("failed to read plugins directory: %w", err)
@@ -112,8 +105,11 @@ func (pm *PluginManager) LoadPlugins() error {
 			logger.Warn("Legacy plugin file found in root of plugins directory (ignored under new structure)", map[string]interface{}{"file": entry.Name()})
 		}
 	}
+	return nil
+}
 
-	// 2. Determine plugin names from config (PluginsRaw keys, excluding 'directory')
+// Helper: Load plugins from config
+func (pm *PluginManager) loadPluginsFromConfig() error {
 	pluginNames := make([]string, 0)
 	if pm.config != nil && pm.config.PluginsRaw != nil {
 		for key := range pm.config.PluginsRaw {
@@ -123,12 +119,9 @@ func (pm *PluginManager) LoadPlugins() error {
 			pluginNames = append(pluginNames, key)
 		}
 	}
-
-	// 3. For each plugin name, look for a subfolder and load plugin.lua if enabled
 	for _, pluginName := range pluginNames {
 		pluginDir := filepath.Join(pm.pluginsDir, pluginName)
 		pluginFile := filepath.Join(pluginDir, "plugin.lua")
-
 		// Check if plugin is enabled in configuration BEFORE loading
 		enabled := true // Default to enabled
 		if pm.config != nil {
@@ -155,7 +148,6 @@ func (pm *PluginManager) LoadPlugins() error {
 			logger.Info("Skipping disabled plugin", map[string]interface{}{"plugin": pluginName})
 			continue
 		}
-
 		// Only load if pluginDir exists and plugin.lua exists
 		if stat, err := os.Stat(pluginFile); err == nil && !stat.IsDir() {
 			if err := pm.LoadPluginFromFile(pluginFile); err != nil {
@@ -166,7 +158,22 @@ func (pm *PluginManager) LoadPlugins() error {
 			logger.Warn("Plugin folder or plugin.lua missing for plugin (skipped)", map[string]interface{}{"plugin": pluginName, "expected_path": pluginFile})
 		}
 	}
+	return nil
+}
 
+// LoadPlugins loads all plugins from the plugins directory
+func (pm *PluginManager) LoadPlugins() error {
+	logger.Debug("[PLUGIN] Loading plugins from directory: " + pm.pluginsDir)
+	// Create plugins directory if it doesn't exist
+	if err := os.MkdirAll(pm.pluginsDir, 0750); err != nil {
+		return fmt.Errorf("failed to create plugins directory: %w", err)
+	}
+	if err := pm.warnLegacyPlugins(); err != nil {
+		return err
+	}
+	if err := pm.loadPluginsFromConfig(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -190,7 +197,28 @@ func (pm *PluginManager) LoadPluginFromFile(filePath string) error {
 	return pm.LoadPlugin(pluginName, string(content))
 }
 
-// LoadPlugin loads a plugin from Lua code
+// Helper: Extract plugin info from Lua state
+func extractPluginInfo(L *lua.LState, pluginInfo *lua.LTable) (version, description, author lua.LValue) {
+	version = L.GetField(pluginInfo, "version")
+	description = L.GetField(pluginInfo, "description")
+	author = L.GetField(pluginInfo, "author")
+	return
+}
+
+// Helper: Merge pending hooks from Lua state
+func mergePendingHooks(L *lua.LState, plugin *Plugin) {
+	if hooksTable := L.GetGlobal("__pomodux_pending_hooks"); hooksTable.Type() == lua.LTTable {
+		hooks := hooksTable.(*lua.LTable)
+		hooks.ForEach(func(key lua.LValue, value lua.LValue) {
+			eventType := EventType(key.String())
+			if value.Type() == lua.LTFunction {
+				plugin.Hooks[eventType] = append(plugin.Hooks[eventType], value)
+			}
+		})
+		L.SetGlobal("__pomodux_pending_hooks", lua.LNil)
+	}
+}
+
 func (pm *PluginManager) LoadPlugin(name, code string) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
@@ -220,10 +248,7 @@ func (pm *PluginManager) LoadPlugin(name, code string) error {
 	}
 
 	// Extract plugin info
-	pluginInfo := pluginTable.(*lua.LTable)
-	version := L.GetField(pluginInfo, "version")
-	description := L.GetField(pluginInfo, "description")
-	author := L.GetField(pluginInfo, "author")
+	version, description, author := extractPluginInfo(L, pluginTable.(*lua.LTable))
 
 	// Check if plugin is enabled in configuration
 	enabled := true // Default to enabled if not specified in config
@@ -260,16 +285,7 @@ func (pm *PluginManager) LoadPlugin(name, code string) error {
 	}
 
 	// Merge any pending hooks from Lua state
-	if hooksTable := L.GetGlobal("__pomodux_pending_hooks"); hooksTable.Type() == lua.LTTable {
-		hooks := hooksTable.(*lua.LTable)
-		hooks.ForEach(func(key lua.LValue, value lua.LValue) {
-			eventType := EventType(key.String())
-			if value.Type() == lua.LTFunction {
-				plugin.Hooks[eventType] = append(plugin.Hooks[eventType], value)
-			}
-		})
-		L.SetGlobal("__pomodux_pending_hooks", lua.LNil)
-	}
+	mergePendingHooks(L, plugin)
 
 	// Store plugin
 	pm.plugins[name] = plugin
@@ -305,17 +321,18 @@ func (pm *PluginManager) registerPluginAPI(L *lua.LState) {
 	pm.registerUtilityFunctions(L, pomoduxTable)
 }
 
-// registerUtilityFunctions registers utility functions for plugins
-func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *lua.LTable) {
-	// Log function
+// Helper: Register log function in Lua
+func registerLogFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	logFn := L.NewFunction(func(L *lua.LState) int {
 		message := L.CheckString(1)
 		logger.Debug("[PLUGIN] " + message)
 		return 0
 	})
 	pomoduxTable.RawSetString("log", logFn)
+}
 
-	// Get config function
+// Helper: Register get_config function in Lua
+func registerGetConfigFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	getConfigFn := L.NewFunction(func(L *lua.LState) int {
 		_ = L.CheckString(1) // key parameter (not used yet)
 		defaultValue := L.OptString(2, "")
@@ -324,8 +341,10 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 1
 	})
 	pomoduxTable.RawSetString("get_config", getConfigFn)
+}
 
-	// Show notification function (TUI)
+// Helper: Register show_notification function in Lua
+func registerShowNotificationFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	showNotificationFn := L.NewFunction(func(L *lua.LState) int {
 		message := L.CheckString(1)
 		logger.Debug("[PLUGIN] Lua called pomodux.show_notification with message: " + message)
@@ -337,8 +356,10 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 1
 	})
 	pomoduxTable.RawSetString("show_notification", showNotificationFn)
+}
 
-	// ShowListSelection displays a modal list selection dialog using tview
+// Helper: Register select_from_list function in Lua
+func registerSelectFromListFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	selectFromListFn := L.NewFunction(func(L *lua.LState) int {
 		title := L.CheckString(1)
 		optionsTable := L.CheckTable(2)
@@ -357,8 +378,10 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 2
 	})
 	pomoduxTable.RawSetString("select_from_list", selectFromListFn)
+}
 
-	// ShowEnhancedListSelection displays a modal list selection dialog with enhanced items
+// Helper: Register select_from_list_enhanced function in Lua
+func registerSelectFromListEnhancedFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	selectFromListEnhancedFn := L.NewFunction(func(L *lua.LState) int {
 		title := L.CheckString(1)
 		itemsTable := L.CheckTable(2)
@@ -408,8 +431,10 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 2
 	})
 	pomoduxTable.RawSetString("select_from_list_enhanced", selectFromListEnhancedFn)
+}
 
-	// ShowInputPrompt displays a modal input prompt dialog
+// Helper: Register input_prompt function in Lua
+func registerInputPromptFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	inputPromptFn := L.NewFunction(func(L *lua.LState) int {
 		title := L.CheckString(1)
 		defaultValue := L.OptString(2, "")
@@ -426,6 +451,15 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 2
 	})
 	pomoduxTable.RawSetString("input_prompt", inputPromptFn)
+}
+
+func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *lua.LTable) {
+	registerLogFn(L, pomoduxTable)
+	registerGetConfigFn(L, pomoduxTable)
+	registerShowNotificationFn(L, pomoduxTable)
+	registerSelectFromListFn(L, pomoduxTable)
+	registerSelectFromListEnhancedFn(L, pomoduxTable)
+	registerInputPromptFn(L, pomoduxTable)
 }
 
 // registerPlugin registers a plugin with the manager
@@ -567,6 +601,10 @@ func (pm *PluginManager) callHook(plugin *Plugin, hook lua.LValue, event Event) 
 				event.Data[keyStr] = int(value.(lua.LNumber))
 			case lua.LTBool:
 				event.Data[keyStr] = bool(value.(lua.LBool))
+			case lua.LTNil, lua.LTFunction, lua.LTUserData, lua.LTThread, lua.LTTable, lua.LTChannel:
+				// No-op for these types, but handled for exhaustiveness
+			default:
+				// No-op
 			}
 		})
 	}
@@ -790,7 +828,7 @@ func ShowEnhancedListSelection(title string, items []ListItem) (int, bool) {
 }
 
 // ShowInputPrompt displays a modal input prompt dialog
-func ShowInputPrompt(title string, defaultValue string, placeholder string) (string, bool) {
+func ShowInputPrompt(title, defaultValue, placeholder string) (string, bool) {
 	result := ""
 	confirmed := false
 	app := tview.NewApplication()

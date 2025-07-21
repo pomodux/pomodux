@@ -60,7 +60,7 @@ If no duration is specified, uses the default work duration from config.`,
 			// Check if this is a normal cancellation
 			if plugin.IsCancellationError(err) {
 				// Print a friendly message and exit normally
-				// cmd.PrintErrln("Timer setup cancelled.")
+				cmd.PrintErrln("Timer setup canceled.")
 				return nil
 			}
 			return err
