@@ -673,3 +673,9 @@ After completing the setup:
 - **[Release Management](docs/release-management.md)** - Release process and approval gates
 - **[Logging Standards](docs/logging-standards.md)** - Logging configuration and standards
 - **[ADR](docs/adr/)** - Architecture Decision Records
+
+## TUI Plugin Support (since 0.4.0)
+
+- The project uses [tview](https://github.com/rivo/tview) for terminal UI notifications from plugins.
+- To test TUI plugin features, enable a plugin (e.g., debug_events.lua) and trigger a timer completion event.
+- You should see a modal notification in the terminal when the event occurs.

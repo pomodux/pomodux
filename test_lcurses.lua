@@ -1,0 +1,6 @@
+local curses = require("curses")
+curses.initscr()
+curses.addstr("Hello from LuaJIT + lcurses! Press any key to exit.")
+curses.refresh()
+curses.getch()
+curses.endwin() 

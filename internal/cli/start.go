@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/rsmacapinlac/pomodux/internal/config"
+	"github.com/rsmacapinlac/pomodux/internal/plugin"
 	"github.com/rsmacapinlac/pomodux/internal/timer"
 	"github.com/spf13/cobra"
 )
@@ -54,7 +55,17 @@ If no duration is specified, uses the default work duration from config.`,
 		}
 
 		// Start the persistent timer (this will block until completion)
-		return t.StartPersistent(duration, timer.SessionTypeWork)
+		err = t.StartPersistent(duration, timer.SessionTypeWork)
+		if err != nil {
+			// Check if this is a normal cancellation
+			if plugin.IsCancellationError(err) {
+				// Print a friendly message and exit normally
+				cmd.PrintErrln("Timer setup cancelled.")
+				return nil
+			}
+			return err
+		}
+		return nil
 	},
 }
 

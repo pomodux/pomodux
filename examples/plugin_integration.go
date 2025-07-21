@@ -28,7 +28,7 @@ func main() {
 	fmt.Println("Using plugins directory:", pluginsDir)
 
 	// Create plugin manager
-	pm := plugin.NewPluginManager(pluginsDir)
+	pm := plugin.NewPluginManager(pluginsDir, nil)
 	defer pm.Shutdown()
 
 	// Load all plugins from the plugins directory

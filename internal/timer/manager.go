@@ -49,7 +49,7 @@ func GetGlobalTimer() *Timer {
 		}
 
 		// Create plugin manager
-		pluginManager := plugin.NewPluginManager(cfg.Plugins.Directory)
+		pluginManager := plugin.NewPluginManager(cfg.Plugins.Directory, cfg)
 
 		// Load plugins
 		if err := pluginManager.LoadPlugins(); err != nil {

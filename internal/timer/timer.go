@@ -80,6 +80,37 @@ func (t *Timer) StartWithType(duration time.Duration, sessionType SessionType) e
 	if duration <= 0 {
 		return fmt.Errorf("invalid duration")
 	}
+
+	// Prepare session data for plugins to potentially modify
+	sessionData := map[string]interface{}{
+		"session_type": string(sessionType),
+		"duration":     int(duration.Seconds()),
+	}
+
+	// Emit timer setup event for plugins (before timer actually starts)
+	if t.pluginManager != nil {
+		event := plugin.Event{
+			Type:      plugin.EventTimerSetup,
+			Timestamp: time.Now(),
+			Data:      sessionData,
+		}
+		if err := t.pluginManager.EmitEventSync(event); err != nil {
+			// Check if this is a normal cancellation
+			if plugin.IsCancellationError(err) {
+				return err // Return the cancellation error directly
+			}
+			return fmt.Errorf("timer setup failed: %w", err)
+		}
+
+		// Check if plugins modified the session data
+		if modifiedDuration, ok := sessionData["duration"].(int); ok && modifiedDuration > 0 {
+			duration = time.Duration(modifiedDuration) * time.Second
+		}
+		if modifiedSessionType, ok := sessionData["session_type"].(string); ok && modifiedSessionType != "" {
+			sessionType = SessionType(modifiedSessionType)
+		}
+	}
+
 	t.duration = duration
 	t.sessionType = sessionType
 	t.startTime = time.Now()
@@ -393,7 +424,7 @@ func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType)
 
 	logger.Info("Timer started", map[string]interface{}{"duration": duration, "session_type": sessionType})
 	fmt.Printf("Timer started for %v\n", duration)
-	fmt.Printf("Session type: %s\n", sessionType)
+	fmt.Printf("Session type: %s\n", t.GetSessionType())
 	fmt.Println("Press 'p' to pause, 'r' to resume, 'q'/'s' to stop, Ctrl+C to exit.")
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
@@ -524,11 +555,10 @@ func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType)
 				progressBar := createProgressBar(progress, 30)
 				percentage := int(progress * 100)
 				// Display timer with progress bar
-				fmt.Printf("\r%s %3d%% %s | %s",
+				fmt.Printf("\r%s %3d%% %s",
 					progressBar,
 					percentage,
-					formatDuration(remaining),
-					sessionType)
+					formatDuration(remaining))
 				logger.Debug("Timer progress", map[string]interface{}{"progress": progress, "remaining": remaining, "elapsed": elapsed})
 				if remaining <= 0 {
 					break

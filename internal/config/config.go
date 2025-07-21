@@ -31,8 +31,12 @@ type Config struct {
 	} `yaml:"notifications"`
 
 	Plugins struct {
-		Directory string `yaml:"directory"`
+		Directory string          `yaml:"directory"`
+		Enabled   map[string]bool `yaml:"enabled"`
 	} `yaml:"plugins"`
+
+	// Raw plugins section for plugin-specific config
+	PluginsRaw map[string]interface{} // no yaml tag
 
 	Logging struct {
 		Level      string `yaml:"level"`
@@ -69,6 +73,7 @@ func DefaultConfig() *Config {
 
 	// Plugins directory default
 	config.Plugins.Directory = defaultPluginsDir()
+	config.Plugins.Enabled = make(map[string]bool) // Initialize Enabled map
 
 	// Logging defaults
 	config.Logging.Level = "info"
@@ -118,6 +123,16 @@ func Load() (*Config, error) {
 	config := DefaultConfig()
 	if err := yaml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	// Unmarshal the plugins section into PluginsRaw
+	var raw map[string]interface{}
+	if err := yaml.Unmarshal(data, &raw); err == nil {
+		if pluginsSection, ok := raw["plugins"]; ok {
+			if pluginsMap, ok := pluginsSection.(map[string]interface{}); ok {
+				config.PluginsRaw = pluginsMap
+			}
+		}
 	}
 
 	// Ensure plugins directory is set

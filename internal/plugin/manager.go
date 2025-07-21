@@ -9,15 +9,32 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rsmacapinlac/pomodux/internal/config"
 	"github.com/rsmacapinlac/pomodux/internal/logger"
 
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 	lua "github.com/yuin/gopher-lua"
 )
+
+// CancellationError represents a normal user cancellation
+type CancellationError struct{}
+
+func (e CancellationError) Error() string {
+	return "timer setup cancelled by user"
+}
+
+// IsCancellationError checks if an error is a cancellation error
+func IsCancellationError(err error) bool {
+	_, ok := err.(CancellationError)
+	return ok
+}
 
 // EventType represents the type of timer event
 type EventType string
 
 const (
+	EventTimerSetup     EventType = "timer_setup"
 	EventTimerStarted   EventType = "timer_started"
 	EventTimerPaused    EventType = "timer_paused"
 	EventTimerResumed   EventType = "timer_resumed"
@@ -52,6 +69,7 @@ type PluginManager struct {
 	done       chan struct{}
 	pluginsDir string
 	api        *PluginAPI
+	config     *config.Config // Added config field
 }
 
 // PluginAPI provides the interface for plugins to register themselves
@@ -60,12 +78,13 @@ type PluginAPI struct {
 }
 
 // NewPluginManager creates a new plugin manager
-func NewPluginManager(pluginsDir string) *PluginManager {
+func NewPluginManager(pluginsDir string, config *config.Config) *PluginManager {
 	pm := &PluginManager{
 		plugins:    make(map[string]*Plugin),
 		events:     make(chan Event, 100),
 		done:       make(chan struct{}),
 		pluginsDir: pluginsDir,
+		config:     config,
 	}
 
 	pm.api = &PluginAPI{manager: pm}
@@ -78,6 +97,7 @@ func NewPluginManager(pluginsDir string) *PluginManager {
 
 // LoadPlugins loads all plugins from the plugins directory
 func (pm *PluginManager) LoadPlugins() error {
+	logger.Debug("[PLUGIN] Loading plugins from directory: " + pm.pluginsDir)
 	// Create plugins directory if it doesn't exist
 	if err := os.MkdirAll(pm.pluginsDir, 0750); err != nil {
 		return fmt.Errorf("failed to create plugins directory: %w", err)
@@ -96,6 +116,7 @@ func (pm *PluginManager) LoadPlugins() error {
 
 		// Load the plugin
 		if err := pm.LoadPluginFromFile(path); err != nil {
+			fmt.Printf("❌ Failed to load plugin %s: %v\n", filepath.Base(path), err)
 			logger.Warn("Failed to load plugin", map[string]interface{}{"path": path, "error": err.Error()})
 			return nil // Continue loading other plugins
 		}
@@ -106,6 +127,7 @@ func (pm *PluginManager) LoadPlugins() error {
 
 // LoadPluginFromFile loads a plugin from a Lua file
 func (pm *PluginManager) LoadPluginFromFile(filePath string) error {
+	logger.Debug("[PLUGIN] Loading plugin from file: " + filePath)
 	// Validate file path for security
 	if err := validateFilePath(filePath); err != nil {
 		return fmt.Errorf("invalid file path: %w", err)
@@ -159,6 +181,29 @@ func (pm *PluginManager) LoadPlugin(name, code string) error {
 	description := L.GetField(pluginInfo, "description")
 	author := L.GetField(pluginInfo, "author")
 
+	// Check if plugin is enabled in configuration
+	enabled := true // Default to enabled if not specified in config
+	if pm.config != nil {
+		// New style: plugin-specific sub-object
+		if pm.config.PluginsRaw != nil {
+			if pluginSection, ok := pm.config.PluginsRaw[name]; ok {
+				if pluginMap, ok := pluginSection.(map[string]interface{}); ok {
+					if enabledVal, ok := pluginMap["enabled"]; ok {
+						if b, ok := enabledVal.(bool); ok {
+							enabled = b
+						}
+					}
+				}
+			}
+		}
+		// Old style: enabled map
+		if pm.config.Plugins.Enabled != nil {
+			if enabledState, exists := pm.config.Plugins.Enabled[name]; exists {
+				enabled = enabledState
+			}
+		}
+	}
+
 	// Create plugin instance
 	plugin := &Plugin{
 		Name:        name,
@@ -167,7 +212,7 @@ func (pm *PluginManager) LoadPlugin(name, code string) error {
 		Author:      author.String(),
 		LState:      L,
 		Hooks:       make(map[EventType][]lua.LValue),
-		Enabled:     true,
+		Enabled:     enabled,
 	}
 
 	// Merge any pending hooks from Lua state
@@ -235,6 +280,108 @@ func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *l
 		return 1
 	})
 	pomoduxTable.RawSetString("get_config", getConfigFn)
+
+	// Show notification function (TUI)
+	showNotificationFn := L.NewFunction(func(L *lua.LState) int {
+		message := L.CheckString(1)
+		logger.Debug("[PLUGIN] Lua called pomodux.show_notification with message: " + message)
+		if ShowNotification(message) {
+			L.Push(lua.LTrue)
+		} else {
+			L.Push(lua.LFalse)
+		}
+		return 1
+	})
+	pomoduxTable.RawSetString("show_notification", showNotificationFn)
+
+	// ShowListSelection displays a modal list selection dialog using tview
+	selectFromListFn := L.NewFunction(func(L *lua.LState) int {
+		title := L.CheckString(1)
+		optionsTable := L.CheckTable(2)
+		options := []string{}
+		optionsTable.ForEach(func(_, v lua.LValue) {
+			options = append(options, v.String())
+		})
+		idx, ok := ShowListSelection(title, options)
+		if ok {
+			L.Push(lua.LNumber(idx + 1)) // Lua is 1-based
+			L.Push(lua.LTrue)
+		} else {
+			L.Push(lua.LNil)
+			L.Push(lua.LFalse)
+		}
+		return 2
+	})
+	pomoduxTable.RawSetString("select_from_list", selectFromListFn)
+
+	// ShowEnhancedListSelection displays a modal list selection dialog with enhanced items
+	selectFromListEnhancedFn := L.NewFunction(func(L *lua.LState) int {
+		title := L.CheckString(1)
+		itemsTable := L.CheckTable(2)
+		items := []ListItem{}
+
+		logger.Debug(fmt.Sprintf("[LUA] Enhanced list selection called with title: %s", title))
+		logger.Debug(fmt.Sprintf("[LUA] Items table length: %d", itemsTable.Len()))
+
+		itemsTable.ForEach(func(_, v lua.LValue) {
+			if v.Type() == lua.LTTable {
+				itemTable := v.(*lua.LTable)
+				item := ListItem{}
+
+				if text := L.GetField(itemTable, "text"); text.Type() == lua.LTString {
+					item.Text = text.String()
+				}
+				if subtext := L.GetField(itemTable, "subtext"); subtext.Type() == lua.LTString {
+					item.Subtext = subtext.String()
+				}
+				if isRecent := L.GetField(itemTable, "is_recent"); isRecent.Type() == lua.LTBool {
+					item.IsRecent = bool(isRecent.(lua.LBool))
+				}
+				if isSeparator := L.GetField(itemTable, "is_separator"); isSeparator.Type() == lua.LTBool {
+					item.IsSeparator = bool(isSeparator.(lua.LBool))
+				}
+				if usageCount := L.GetField(itemTable, "usage_count"); usageCount.Type() == lua.LTNumber {
+					item.UsageCount = int(usageCount.(lua.LNumber))
+				}
+
+				items = append(items, item)
+				logger.Debug(fmt.Sprintf("[LUA] Added item: text='%s', subtext='%s', is_separator=%v",
+					item.Text, item.Subtext, item.IsSeparator))
+			}
+		})
+
+		logger.Debug(fmt.Sprintf("[LUA] Calling ShowEnhancedListSelection with %d items", len(items)))
+		idx, ok := ShowEnhancedListSelection(title, items)
+		logger.Debug(fmt.Sprintf("[LUA] ShowEnhancedListSelection returned: idx=%d, ok=%v", idx, ok))
+
+		if ok {
+			L.Push(lua.LNumber(idx + 1)) // Lua is 1-based
+			L.Push(lua.LTrue)
+		} else {
+			L.Push(lua.LNil)
+			L.Push(lua.LFalse)
+		}
+		return 2
+	})
+	pomoduxTable.RawSetString("select_from_list_enhanced", selectFromListEnhancedFn)
+
+	// ShowInputPrompt displays a modal input prompt dialog
+	inputPromptFn := L.NewFunction(func(L *lua.LState) int {
+		title := L.CheckString(1)
+		defaultValue := L.OptString(2, "")
+		placeholder := L.OptString(3, "")
+
+		result, ok := ShowInputPrompt(title, defaultValue, placeholder)
+		if ok {
+			L.Push(lua.LString(result))
+			L.Push(lua.LTrue)
+		} else {
+			L.Push(lua.LString(""))
+			L.Push(lua.LFalse)
+		}
+		return 2
+	})
+	pomoduxTable.RawSetString("input_prompt", inputPromptFn)
 }
 
 // registerPlugin registers a plugin with the manager
@@ -296,13 +443,18 @@ func (api *PluginAPI) registerHook(L *lua.LState, eventType string, callback *lu
 
 // EmitEvent emits an event to all registered plugins
 func (pm *PluginManager) EmitEvent(event Event) {
-	logger.Debug("PLUGIN: EmitEvent called", map[string]interface{}{"event": event.Type})
+	logger.Debug("[PLUGIN] Emitting event: " + string(event.Type))
 	select {
 	case pm.events <- event:
 		logger.Debug("PLUGIN: Event queued for processing", map[string]interface{}{"event": event.Type})
 	default:
 		logger.Warn("PLUGIN: Event channel full, dropping event", map[string]interface{}{"event": event.Type})
 	}
+}
+
+// EmitEventSync emits an event and calls hooks synchronously (for blocking events like timer_setup)
+func (pm *PluginManager) EmitEventSync(event Event) error {
+	return pm.callPluginHooks(event)
 }
 
 // processEvents processes events and calls plugin hooks
@@ -317,73 +469,61 @@ func (pm *PluginManager) processEvents() {
 	}
 }
 
-// callPluginHooks calls all registered hooks for an event
-func (pm *PluginManager) callPluginHooks(event Event) {
-	logger.Debug("PLUGIN: callPluginHooks", map[string]interface{}{"event": event.Type})
+// callPluginHooks calls all registered hooks for an event and returns error if any fail
+func (pm *PluginManager) callPluginHooks(event Event) error {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
-
 	for _, plugin := range pm.plugins {
+		// Skip disabled plugins
 		if !plugin.Enabled {
 			continue
 		}
-
 		plugin.mu.RLock()
 		hooks := plugin.Hooks[event.Type]
 		plugin.mu.RUnlock()
-
-		logger.Debug("PLUGIN: Plugin has hooks", map[string]interface{}{"plugin": plugin.Name, "hook_count": len(hooks), "event": event.Type})
 		for _, hook := range hooks {
-			logger.Debug("PLUGIN: Calling hook", map[string]interface{}{"plugin": plugin.Name, "event": event.Type})
 			if err := pm.callHook(plugin, hook, event); err != nil {
-				logger.Error("PLUGIN: Error calling hook", err, map[string]interface{}{"plugin": plugin.Name})
+				return err
 			}
 		}
 	}
+	return nil
 }
 
-// callHook calls a single plugin hook
+// callHook calls a single plugin hook and returns error if the hook fails or returns false
 func (pm *PluginManager) callHook(plugin *Plugin, hook lua.LValue, event Event) error {
-	// Lock the plugin's mutex to ensure thread-safe access to Lua state
-	plugin.mu.Lock()
-	defer plugin.mu.Unlock()
-
 	L := plugin.LState
-
-	// Create event table for Lua
-	eventTable := L.CreateTable(0, 3)
-	eventTable.RawSetString("type", lua.LString(event.Type))
-	eventTable.RawSetString("timestamp", lua.LNumber(event.Timestamp.Unix()))
-
-	// Create data table
-	dataTable := L.CreateTable(0, len(event.Data))
-	for k, v := range event.Data {
-		switch val := v.(type) {
-		case string:
-			dataTable.RawSetString(k, lua.LString(val))
-		case int:
-			dataTable.RawSetString(k, lua.LNumber(val))
-		case float64:
-			dataTable.RawSetString(k, lua.LNumber(val))
-		case bool:
-			dataTable.RawSetString(k, lua.LBool(val))
-		default:
-			dataTable.RawSetString(k, lua.LString(fmt.Sprintf("%v", val)))
-		}
-	}
-	eventTable.RawSetString("data", dataTable)
-
-	// Call the hook function
-	logger.Debug("PLUGIN: About to call Lua hook", map[string]interface{}{"plugin": plugin.Name, "event": event.Type})
-	if err := L.CallByParam(lua.P{
-		Fn:      hook.(*lua.LFunction),
-		NRet:    0,
-		Protect: true,
-	}, eventTable); err != nil {
-		logger.Error("PLUGIN: Error calling Lua hook", err, map[string]interface{}{"plugin": plugin.Name, "event": event.Type})
+	// Push the hook function and event argument
+	L.Push(hook)
+	L.Push(pm.eventToLuaTable(L, event))
+	// Call the function with 1 argument, 1 result
+	err := L.PCall(1, 1, nil)
+	if err != nil {
 		return fmt.Errorf("failed to call hook: %w", err)
 	}
-	logger.Debug("PLUGIN: Successfully called Lua hook", map[string]interface{}{"plugin": plugin.Name, "event": event.Type})
+	ret := L.Get(-1)
+	L.Pop(1)
+
+	// Check for cancellation (false return)
+	if ret.Type() == lua.LTBool && ret == lua.LFalse {
+		return CancellationError{}
+	}
+
+	// Check for session data modifications (table return)
+	if ret.Type() == lua.LTTable {
+		modifications := ret.(*lua.LTable)
+		modifications.ForEach(func(key lua.LValue, value lua.LValue) {
+			keyStr := key.String()
+			switch value.Type() {
+			case lua.LTString:
+				event.Data[keyStr] = value.String()
+			case lua.LTNumber:
+				event.Data[keyStr] = int(value.(lua.LNumber))
+			case lua.LTBool:
+				event.Data[keyStr] = bool(value.(lua.LBool))
+			}
+		})
+	}
 
 	return nil
 }
@@ -490,4 +630,164 @@ func validateFilePath(filePath string) error {
 	}
 
 	return nil
+}
+
+// ShowNotification displays a modal notification using tview and returns true if OK, false if Cancel
+func ShowNotification(message string) bool {
+	logger.Debug("[PLUGIN] ShowNotification called with message: " + message)
+	result := false
+	app := tview.NewApplication()
+	modal := tview.NewModal().
+		SetText(message).
+		AddButtons([]string{"OK", "Cancel"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if buttonLabel == "OK" {
+				result = true
+			}
+			app.Stop()
+		})
+	_ = app.SetRoot(modal, false).Run()
+	return result
+}
+
+// ShowListSelection displays a modal list selection dialog using tview
+func ShowListSelection(title string, options []string) (int, bool) {
+	selected := -1
+	confirmed := false
+	app := tview.NewApplication()
+	list := tview.NewList()
+	for i, opt := range options {
+		list.AddItem(opt, "", 0, func(idx int) func() {
+			return func() {
+				selected = idx
+				confirmed = true
+				app.Stop()
+			}
+		}(i))
+	}
+	list.SetTitle(title).SetBorder(true)
+	list.SetDoneFunc(func() {
+		app.Stop()
+	})
+	_ = app.SetRoot(list, true).Run()
+	return selected, confirmed
+}
+
+// ListItem represents an item in an enhanced list selection
+type ListItem struct {
+	Text        string
+	Subtext     string
+	IsRecent    bool
+	IsSeparator bool
+	UsageCount  int
+}
+
+// ShowEnhancedListSelection displays a modal list selection dialog with enhanced items
+func ShowEnhancedListSelection(title string, items []ListItem) (int, bool) {
+	selected := -1
+	confirmed := false
+	app := tview.NewApplication()
+	list := tview.NewList()
+
+	// Add debugging
+	logger.Debug(fmt.Sprintf("[TUI] Enhanced list selection: %s with %d items", title, len(items)))
+
+	// Debug: Print all items
+	for i, item := range items {
+		logger.Debug(fmt.Sprintf("[TUI] Item %d: text='%s', subtext='%s', is_separator=%v",
+			i, item.Text, item.Subtext, item.IsSeparator))
+	}
+
+	for i, item := range items {
+		if item.IsSeparator {
+			// Add separator item
+			separatorText := "─ " + item.Text + " ─"
+			list.AddItem(separatorText, "", 0, nil)
+			logger.Debug(fmt.Sprintf("[TUI] Added separator item %d: %s", i, separatorText))
+		} else {
+			// Add regular item with subtext
+			displayText := item.Text
+			if item.Subtext != "" {
+				displayText = displayText + " (" + item.Subtext + ")"
+			}
+			list.AddItem(displayText, "", 0, func(idx int) func() {
+				return func() {
+					logger.Debug(fmt.Sprintf("[TUI] User clicked on item %d: %s", idx, items[idx].Text))
+					selected = idx
+					confirmed = true
+					logger.Debug(fmt.Sprintf("[TUI] Setting selected=%d, confirmed=%v", selected, confirmed))
+					app.Stop()
+				}
+			}(i))
+			logger.Debug(fmt.Sprintf("[TUI] Added selectable item %d: %s", i, displayText))
+		}
+	}
+
+	list.SetTitle(title).SetBorder(true)
+
+	// Add keyboard shortcuts for better UX
+	list.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		logger.Debug(fmt.Sprintf("[TUI] Key pressed: %v", event.Key()))
+		if event.Key() == tcell.KeyEscape {
+			logger.Debug("[TUI] User pressed Escape - cancelling selection")
+			app.Stop()
+			return nil
+		}
+		return event
+	})
+
+	logger.Debug("[TUI] Starting enhanced list selection dialog")
+	_ = app.SetRoot(list, true).Run()
+
+	logger.Debug(fmt.Sprintf("[TUI] Enhanced list selection result: selected=%d, confirmed=%v", selected, confirmed))
+	return selected, confirmed
+}
+
+// ShowInputPrompt displays a modal input prompt dialog
+func ShowInputPrompt(title string, defaultValue string, placeholder string) (string, bool) {
+	result := ""
+	confirmed := false
+	app := tview.NewApplication()
+
+	// Create a simple form with title, input, and buttons
+	form := tview.NewForm().
+		AddTextView("Title", title, 0, 1, true, false).
+		AddInputField("Input", defaultValue, 50, nil, func(text string) {
+			result = text
+		}).
+		AddButton("OK", func() {
+			confirmed = true
+			app.Stop()
+		}).
+		AddButton("Cancel", func() {
+			app.Stop()
+		})
+
+	form.SetBorder(true).SetTitle("Input Prompt")
+	_ = app.SetRoot(form, true).Run()
+	return result, confirmed
+}
+
+// eventToLuaTable converts a Go Event to a Lua table for Lua hooks
+func (pm *PluginManager) eventToLuaTable(L *lua.LState, event Event) *lua.LTable {
+	eventTable := L.CreateTable(0, 3)
+	eventTable.RawSetString("type", lua.LString(event.Type))
+	eventTable.RawSetString("timestamp", lua.LNumber(event.Timestamp.Unix()))
+	dataTable := L.CreateTable(0, len(event.Data))
+	for k, v := range event.Data {
+		switch val := v.(type) {
+		case string:
+			dataTable.RawSetString(k, lua.LString(val))
+		case int:
+			dataTable.RawSetString(k, lua.LNumber(val))
+		case float64:
+			dataTable.RawSetString(k, lua.LNumber(val))
+		case bool:
+			dataTable.RawSetString(k, lua.LBool(val))
+		default:
+			dataTable.RawSetString(k, lua.LString(fmt.Sprintf("%v", val)))
+		}
+	}
+	eventTable.RawSetString("data", dataTable)
+	return eventTable
 }

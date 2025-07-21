@@ -158,6 +158,24 @@ The Pomodux terminal timer application follows a modular architecture with clear
 
 **Rationale**: Moving notifications to plugins makes the system more extensible and allows users to customize notification behavior without modifying core code.
 
+## Plugin TUI API (since 0.4.0)
+
+Lua plugins can now display TUI notifications using the following function:
+
+```
+pomodux.show_notification(message: string)
+```
+
+- Displays a modal notification in the terminal UI with the given message.
+- Non-blocking: the notification runs in a separate goroutine.
+- Example usage:
+
+```lua
+pomodux.show_notification("Hello from your plugin!")
+```
+
+See `plugins/debug_events.lua` for a real-world example.
+
 ## 3.0 Data Flow Architecture
 
 ### 3.1 Persistent Timer Flow
