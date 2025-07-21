@@ -17,12 +17,15 @@ help:
 	@echo "  ci-check    - Run all CI checks locally"
 	@echo "  create-release VERSION=x.y.z - Create a new release"
 
+VERSION ?= 0.4.0
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
+BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
 # Build the application
 build:
 	@echo "Building pomodux..."
-	go build -o bin/pomodux cmd/pomodux/main.go
+	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.Version=$(VERSION)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.BuildDate=$(BUILD_DATE)' -X 'github.com/rsmacapinlac/pomodux/internal/cli.Commit=$(GIT_COMMIT)'" -o bin/pomodux cmd/pomodux/main.go
 	@echo "Build complete: bin/pomodux"
-	@echo "Testing executable..."
 	@bin/pomodux --help > /dev/null 2>&1 && echo "Build verification successful!" || echo "Build verification successful! (help requested)"
 
 # Run tests

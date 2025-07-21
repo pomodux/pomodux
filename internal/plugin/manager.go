@@ -114,6 +114,37 @@ func (pm *PluginManager) LoadPlugins() error {
 			return nil
 		}
 
+		// Extract plugin name from filename
+		pluginName := filepath.Base(path)
+		pluginName = pluginName[:len(pluginName)-4] // Remove .lua extension
+
+		// Check if plugin is enabled in configuration BEFORE loading
+		enabled := true // Default to enabled
+		if pm.config != nil {
+			// New style: plugin-specific sub-object
+			if pm.config.PluginsRaw != nil {
+				if pluginSection, ok := pm.config.PluginsRaw[pluginName]; ok {
+					if pluginMap, ok := pluginSection.(map[string]interface{}); ok {
+						if enabledVal, ok := pluginMap["enabled"]; ok {
+							if b, ok := enabledVal.(bool); ok {
+								enabled = b
+							}
+						}
+					}
+				}
+			}
+			// Old style: enabled map
+			if pm.config.Plugins.Enabled != nil {
+				if enabledState, exists := pm.config.Plugins.Enabled[pluginName]; exists {
+					enabled = enabledState
+				}
+			}
+		}
+		if !enabled {
+			logger.Info("Skipping disabled plugin", map[string]interface{}{"plugin": pluginName})
+			return nil
+		}
+
 		// Load the plugin
 		if err := pm.LoadPluginFromFile(path); err != nil {
 			fmt.Printf("❌ Failed to load plugin %s: %v\n", filepath.Base(path), err)
