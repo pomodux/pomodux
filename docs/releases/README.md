@@ -11,7 +11,8 @@ docs/releases/
 ├── release-0.2.0.md             # ✅ What was delivered in Release 0.2.0
 ├── release-0.2.1.md             # ✅ What was delivered in Release 0.2.1
 ├── release-0.3.0.md             # ✅ What was delivered in Release 0.3.0 (COMPLETED)
-└── release-0.3.2.md             # ✅ What was delivered in Release 0.3.2 (COMPLETED)
+├── release-0.3.2.md             # ✅ What was delivered in Release 0.3.2 (COMPLETED)
+└── release-0.3.3.md             # ✅ What was delivered in Release 0.3.3 (COMPLETED)
 ```
 
 ## 📋 Documentation Standards
@@ -73,6 +74,12 @@ docs/releases/
 ### Release 0.3.2 ✅ RELEASED
 - **Document**: `release-0.3.2.md`
 - **Delivered**: Plugin System Integration Fix
+- **Date**: 2025-07-20
+- **Quality**: All 4 gates approved, UAT passed
+
+### Release 0.3.3 ✅ RELEASED
+- **Document**: `release-0.3.3.md`
+- **Delivered**: Stop Command Enhancement
 - **Date**: 2025-07-20
 - **Quality**: All 4 gates approved, UAT passed
 
