@@ -17,7 +17,7 @@ help:
 	@echo "  ci-check    - Run all CI checks locally"
 	@echo "  create-release VERSION=x.y.z - Create a new release"
 
-VERSION ?= 0.4.0
+VERSION ?= 0.4.2
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
