@@ -317,11 +317,30 @@ func registerLogFn(L *lua.LState, pomoduxTable *lua.LTable) {
 }
 
 // Helper: Register get_config function in Lua
-func registerGetConfigFn(L *lua.LState, pomoduxTable *lua.LTable) {
+func (pm *PluginManager) registerGetConfigFn(L *lua.LState, pomoduxTable *lua.LTable) {
 	getConfigFn := L.NewFunction(func(L *lua.LState) int {
-		_ = L.CheckString(1) // key parameter (not used yet)
+		key := L.CheckString(1)
 		defaultValue := L.OptString(2, "")
-		// TODO: Implement config retrieval
+
+		// Get config value from the plugin manager's config
+		if pm.config != nil {
+			// Handle different config sections
+			switch key {
+			case "plugins.kimai":
+				if pm.config.Plugins.Enabled != nil {
+					if enabled, exists := pm.config.Plugins.Enabled["kimai"]; exists {
+						L.Push(lua.LBool(enabled))
+						return 1
+					}
+				}
+			case "plugins.directory":
+				L.Push(lua.LString(pm.config.Plugins.Directory))
+				return 1
+				// Add more config keys as needed
+			}
+		}
+
+		// Return default value if key not found
 		L.Push(lua.LString(defaultValue))
 		return 1
 	})
@@ -440,7 +459,7 @@ func registerInputPromptFn(L *lua.LState, pomoduxTable *lua.LTable) {
 
 func (pm *PluginManager) registerUtilityFunctions(L *lua.LState, pomoduxTable *lua.LTable) {
 	registerLogFn(L, pomoduxTable)
-	registerGetConfigFn(L, pomoduxTable)
+	pm.registerGetConfigFn(L, pomoduxTable)
 	registerShowNotificationFn(L, pomoduxTable)
 	registerSelectFromListFn(L, pomoduxTable)
 	registerSelectFromListEnhancedFn(L, pomoduxTable)

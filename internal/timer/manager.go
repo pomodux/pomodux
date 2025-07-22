@@ -15,12 +15,26 @@ var (
 	globalStateManager   *StateManager
 	globalHistoryManager *HistoryManager
 	globalPluginManager  *plugin.PluginManager
+	globalConfig         *config.Config // Store the global config
 )
 
 // GetGlobalTimer returns the global timer instance.
 // This ensures all CLI commands use the same timer.
 func GetGlobalTimer() *Timer {
 	timerOnce.Do(func() {
+		// Use the global config if available, otherwise load default
+		cfg := globalConfig
+		if cfg == nil {
+			var err error
+			cfg, err = config.Load()
+			if err != nil {
+				logger.Warn("Failed to load configuration for plugin system", map[string]interface{}{"error": err.Error()})
+				// Continue without plugin system
+				createTimerWithoutPlugins()
+				return
+			}
+		}
+
 		// Create state manager
 		stateManager, err := NewStateManager()
 		if err != nil {
@@ -38,15 +52,6 @@ func GetGlobalTimer() *Timer {
 			return
 		}
 		globalHistoryManager = historyManager
-
-		// Initialize plugin manager
-		cfg, err := config.Load()
-		if err != nil {
-			logger.Warn("Failed to load configuration for plugin system", map[string]interface{}{"error": err.Error()})
-			// Continue without plugin system
-			globalTimer = NewTimerWithManagers(stateManager, historyManager)
-			return
-		}
 
 		// Create plugin manager
 		pluginManager := plugin.NewPluginManager(cfg.Plugins.Directory, cfg)
@@ -83,6 +88,36 @@ func GetGlobalTimer() *Timer {
 	})
 
 	return globalTimer
+}
+
+// SetGlobalConfig sets the global configuration to be used by the timer manager.
+// This must be called before GetGlobalTimer() to ensure the correct config is used.
+func SetGlobalConfig(cfg *config.Config) {
+	globalConfig = cfg
+}
+
+// createTimerWithoutPlugins is a helper function to create timer without plugin system
+func createTimerWithoutPlugins() {
+	// Create state manager
+	stateManager, err := NewStateManager()
+	if err != nil {
+		// If we can't create state manager, create timer without persistence
+		globalTimer = NewTimer()
+		return
+	}
+	globalStateManager = stateManager
+
+	// Create history manager
+	historyManager, err := NewHistoryManager()
+	if err != nil {
+		// If we can't create history manager, create timer without history
+		globalTimer = NewTimerWithManagers(stateManager, nil)
+		return
+	}
+	globalHistoryManager = historyManager
+
+	// Create timer without plugin manager
+	globalTimer = NewTimerWithManagers(stateManager, historyManager)
 }
 
 // ShutdownGlobalTimer gracefully shuts down the global timer.

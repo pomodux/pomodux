@@ -10,6 +10,24 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// expandPath expands environment variables and tilde in a path
+func expandPath(path string) string {
+	// Expand environment variables first
+	expanded := os.ExpandEnv(path)
+
+	// Expand tilde to home directory
+	if strings.HasPrefix(expanded, "~/") {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			// If we can't get home directory, return as-is
+			return expanded
+		}
+		expanded = filepath.Join(homeDir, expanded[2:])
+	}
+
+	return expanded
+}
+
 // Config represents the Pomodux configuration structure
 type Config struct {
 	Timer struct {
@@ -135,9 +153,11 @@ func Load() (*Config, error) {
 		}
 	}
 
-	// Ensure plugins directory is set
+	// Ensure plugins directory is set and expand paths
 	if config.Plugins.Directory == "" {
 		config.Plugins.Directory = defaultPluginsDir()
+	} else {
+		config.Plugins.Directory = expandPath(config.Plugins.Directory)
 	}
 
 	// Validate configuration
@@ -209,9 +229,11 @@ func LoadFromPath(path string) (*Config, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Ensure plugins directory is set
+	// Ensure plugins directory is set and expand paths
 	if config.Plugins.Directory == "" {
 		config.Plugins.Directory = defaultPluginsDir()
+	} else {
+		config.Plugins.Directory = expandPath(config.Plugins.Directory)
 	}
 
 	// Validate configuration

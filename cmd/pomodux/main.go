@@ -44,6 +44,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Set the global config for the timer manager
+	timer.SetGlobalConfig(cfg)
+
 	// Initialize logger
 	logConfig := &logger.Config{
 		Level:      logger.LogLevel(cfg.Logging.Level),

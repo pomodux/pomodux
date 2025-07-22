@@ -192,3 +192,47 @@ func TestConfigPathWithXDGConfigHome(t *testing.T) {
 		t.Errorf("expected config path %s, got %s", expectedPath, path)
 	}
 }
+
+func TestExpandPath(t *testing.T) {
+	// Test tilde expansion
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Skip("Cannot get user home directory for test")
+	}
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "tilde expansion",
+			input:    "~/.config/pomodux",
+			expected: filepath.Join(homeDir, ".config", "pomodux"),
+		},
+		{
+			name:     "no tilde",
+			input:    "/absolute/path",
+			expected: "/absolute/path",
+		},
+		{
+			name:     "relative path",
+			input:    "./relative/path",
+			expected: "./relative/path",
+		},
+		{
+			name:     "environment variable",
+			input:    "$HOME/.config/pomodux",
+			expected: filepath.Join(homeDir, ".config", "pomodux"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := expandPath(tt.input)
+			if result != tt.expected {
+				t.Errorf("expandPath(%q) = %q, want %q", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
