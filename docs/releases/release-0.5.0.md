@@ -1,5 +1,13 @@
 # Release 0.5.0 - Responsive TUI Timer Screen
 
+> **STATUS: NOT RELEASED**
+> 
+> The planned Bubbletea-based TUI feature for Pomodux was **not implemented** in this cycle. No code was built or merged for this feature, and the release is **deferred**. All planning, design, and documentation work remains as a reference for future implementation. The TUI feature remains in the backlog and will be re-planned for a future release. See below for the original release plan and acceptance criteria.
+> 
+> **Note (Audit):** Partial Bubbletea-based TUI code exists in `internal/tui/`, but was not merged or enabled for end users in this release. The feature is deferred due to unresolved technical blockers (cross-process synchronization).
+
+---
+
 ## Overview
 
 **Feature:** Responsive TUI Timer Screen
@@ -127,3 +135,6 @@ Below is a mockup of the responsive TUI timer screen as envisioned for this rele
 - This includes notification modals, list selection dialogs, enhanced lists, and input prompts used by plugins.
 - Estimated effort: 1-2 weeks for a robust, tested migration.
 - Benefits: Unified look and feel, reduced dependencies, and easier future development. 
+
+#### Code Status
+- Partial Bubbletea-based TUI code exists in `internal/tui/`, but is not production-ready or enabled for end users. Further work is required to resolve cross-process synchronization and integration challenges. 

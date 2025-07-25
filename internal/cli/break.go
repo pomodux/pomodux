@@ -30,7 +30,7 @@ func runBreak(cmd *cobra.Command, args []string) error {
 			cmd.PrintErrln("Timer already running.")
 			return fmt.Errorf("timer already running")
 		}
-		return t.StartPersistent(duration, timer.SessionTypeBreak)
+		return t.StartPersistent(duration, timer.SessionTypeBreak, false)
 	}
 	duration := cfg.Timer.DefaultBreakDuration
 	t := timer.GetGlobalTimer()
@@ -38,5 +38,5 @@ func runBreak(cmd *cobra.Command, args []string) error {
 		cmd.PrintErrln("Timer already running.")
 		return fmt.Errorf("timer already running")
 	}
-	return t.StartPersistent(duration, timer.SessionTypeBreak)
+	return t.StartPersistent(duration, timer.SessionTypeBreak, false)
 }

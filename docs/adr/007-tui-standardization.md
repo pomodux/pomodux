@@ -66,3 +66,12 @@ This mixed approach led to inconsistencies in user experience, increased mainten
 - [Bubbletea Documentation](https://github.com/charmbracelet/bubbletea)
 - [Lipgloss Documentation](https://github.com/charmbracelet/lipgloss)
 - [tview Documentation](https://github.com/rivo/tview) 
+
+## TUI Testing Strategy
+
+- **teatest** ([github.com/charmbracelet/x/exp/teatest](https://github.com/charmbracelet/x/exp/teatest)) is included as the primary framework for end-to-end and golden file testing of Bubbletea-based TUIs. It allows simulation of keypresses, window resizes, and assertions on output and model state.
+- **termdash** ([github.com/mum4k/termdash](https://github.com/mum4k/termdash)) is included for experimentation and potential future evaluation, providing an alternative approach to terminal UI testing and prototyping.
+
+### Rationale
+- Both libraries are included to ensure robust, automated testing of TUI components and to allow for future flexibility in TUI development and testing strategies.
+- All new Bubbletea-based TUI code should be tested using 'teatest' where possible. 'termdash' may be used for advanced scenarios or comparative evaluation. 

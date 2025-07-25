@@ -1,4 +1,4 @@
-# Retrospectives Directory
+# Pomodux Retrospectives Index
 
 This directory contains retrospective analysis documents for completed releases. Each retrospective captures lessons learned, documentation audits, and improvement recommendations.
 
@@ -21,6 +21,7 @@ Examples:
 - `retrospective-release-0.1.0.md`
 - `retrospective-release-0.2.0.md`
 - `retrospective-release-0.2.1.md`
+- [retrospective-release-0.5.0.md](retrospective-release-0.5.0.md) — Release 0.5.0 (TUI, partial implementation, deferred)
 
 ## Retrospective Process
 

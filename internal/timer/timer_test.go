@@ -246,7 +246,7 @@ func TestStartPersistent(t *testing.T) {
 		// Start persistent timer in a goroutine
 		errChan := make(chan error, 1)
 		go func() {
-			errChan <- timer.StartPersistent(duration, sessionType)
+			errChan <- timer.StartPersistent(duration, sessionType, true)
 		}()
 
 		// Wait for timer to complete
@@ -275,7 +275,7 @@ func TestStartPersistent(t *testing.T) {
 		// Start persistent timer in a goroutine
 		errChan := make(chan error, 1)
 		go func() {
-			errChan <- timer.StartPersistent(duration, sessionType)
+			errChan <- timer.StartPersistent(duration, sessionType, true)
 		}()
 
 		// Wait for timer to complete
@@ -301,7 +301,7 @@ func TestStartPersistent(t *testing.T) {
 		duration := 0 * time.Millisecond
 		sessionType := SessionTypeWork
 
-		err := timer.StartPersistent(duration, sessionType)
+		err := timer.StartPersistent(duration, sessionType, true)
 		if err == nil {
 			t.Error("StartPersistent should return error for zero duration")
 		}
@@ -319,7 +319,7 @@ func TestStartPersistent(t *testing.T) {
 		}
 
 		// Try to start persistent timer while already running
-		err = timer.StartPersistent(duration, sessionType)
+		err = timer.StartPersistent(duration, sessionType, true)
 		if err == nil {
 			t.Error("StartPersistent should return error when timer already running")
 		}

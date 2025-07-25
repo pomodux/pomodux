@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/pomodux/pomodux/internal/config"
-	"github.com/pomodux/pomodux/internal/plugin"
 	"github.com/pomodux/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -54,18 +54,19 @@ If no duration is specified, uses the default work duration from config.`,
 			return fmt.Errorf("timer already running")
 		}
 
-		// Start the persistent timer (this will block until completion)
-		err = t.StartPersistent(duration, timer.SessionTypeWork)
-		if err != nil {
-			// Check if this is a normal cancellation
-			if plugin.IsCancellationError(err) {
-				// Print a friendly message and exit normally
-				cmd.PrintErrln("Timer setup canceled.")
-				return nil
-			}
-			return err
+		// Start the timer using the timer engine (blocking)
+		done := make(chan struct{})
+		var tuiErr error
+		go func() {
+			tuiErr = tui.RunTUI(t)
+			close(done)
+		}()
+		err = t.StartPersistent(duration, timer.SessionTypeWork, true)
+		<-done // Wait for TUI to finish
+		if tuiErr != nil {
+			return tuiErr
 		}
-		return nil
+		return err
 	},
 }
 

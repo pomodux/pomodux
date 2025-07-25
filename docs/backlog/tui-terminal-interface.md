@@ -1,5 +1,8 @@
 # TUI (Terminal User Interface) 📋 PLANNED
 
+> **Update (Release 0.5.0 Audit):**
+> Partial implementation of the TUI exists in `internal/tui/` (Bubbletea-based), but production-ready integration is deferred. The main blocker is unresolved cross-process synchronization complexity. The feature remains high priority and will be re-planned for a future release.
+
 > **Note**: This backlog item follows the 4-gate approval process. Issues can be created from this backlog using the GitHub issue templates in `.github/ISSUE_TEMPLATE/`.
 
 ## Feature Status
@@ -137,6 +140,7 @@ TUI App
 - **Theme System**: Configurable colors and styles
 - **View Components**: Config, history, and help views
 - **State Management**: Timer state loading and application
+- **Partial Implementation**: Bubbletea-based TUI code exists in `internal/tui/`, but is not fully integrated or enabled for end users.
 
 ### ❌ Not Implemented (Previous Attempt)
 - **Reliable Synchronization**: Working cross-process timer sync

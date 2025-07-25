@@ -14,6 +14,7 @@ This folder contains **planning and requirements** for current and future Pomodu
 
 #### High Priority Features
 - **[tui-terminal-interface.md](tui-terminal-interface.md)** - Terminal User Interface 📋 PLANNED
+  - *Note (Release 0.5.0 Audit):* Partial Bubbletea-based TUI implementation exists, but production-ready integration is deferred due to unresolved technical blockers (cross-process sync). Remains high priority for future releases.
 
 #### Medium Priority Features
 - **[data-export-import.md](data-export-import.md)** - Data Export and Import 📋 PLANNED
@@ -27,6 +28,14 @@ This folder contains **planning and requirements** for current and future Pomodu
 - **[log-rotation-system.md](log-rotation-system.md)** - Log Rotation System 📋 PLANNED
 - **[log-analysis-tools.md](log-analysis-tools.md)** - Log Analysis Tools 📋 PLANNED
 - **[enhanced-logging-configuration.md](enhanced-logging-configuration.md)** - Enhanced Logging Configuration 📋 PLANNED
+
+## 0.5.x: Comprehensive Test Review and Improvement
+- Audit all existing unit, integration, and end-to-end tests for relevance and coverage.
+- Update and refactor tests to reflect new TUI-driven workflow and timer logic (including Bubbletea-based TUI).
+- Add missing tests for TUI (using teatest), timer state transitions, plugin integration, and logging.
+- Remove or rewrite outdated or brittle tests.
+- Ensure all tests are runnable via `make test` and update documentation to describe the new test strategy.
+- Improve test maintainability, clarity, and automation.
 
 ## Release Status Legend
 

@@ -417,15 +417,17 @@ func (t *Timer) SetPluginManager(pluginManager *plugin.PluginManager) {
 }
 
 // StartPersistent starts a timer and blocks until completion, with live progress and keypress controls.
-func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType) error {
+func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType, suppressOutput bool) error {
 	if err := t.StartWithType(duration, sessionType); err != nil {
 		return err
 	}
 
 	logger.Info("Timer started", map[string]interface{}{"duration": duration, "session_type": sessionType})
-	fmt.Printf("Timer started for %v\n", duration)
-	fmt.Printf("Session type: %s\n", t.GetSessionType())
-	fmt.Println("Press 'p' to pause, 'r' to resume, 'q'/'s' to stop, Ctrl+C to exit.")
+	if !suppressOutput {
+		fmt.Printf("Timer started for %v\n", duration)
+		fmt.Printf("Session type: %s\n", t.GetSessionType())
+		fmt.Println("Press 'p' to pause, 'r' to resume, 'q'/'s' to stop, Ctrl+C to exit.")
+	}
 
 	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
@@ -528,7 +530,9 @@ func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType)
 				if err := t.Pause(); err != nil {
 					logger.Warn("Failed to pause timer", map[string]interface{}{"error": err.Error()})
 				}
-				fmt.Print("\r⏸️  PAUSED - Press 'r' to resume" + strings.Repeat(" ", 50))
+				if !suppressOutput {
+					fmt.Print("\r⏸️  PAUSED - Press 'r' to resume" + strings.Repeat(" ", 50))
+				}
 			}
 		case <-resumeChan:
 			if paused {
@@ -537,7 +541,9 @@ func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType)
 				}
 				totalPaused += time.Since(pauseStart)
 				paused = false
-				fmt.Print("\r▶️  RESUMED" + strings.Repeat(" ", 50))
+				if !suppressOutput {
+					fmt.Print("\r▶️  RESUMED" + strings.Repeat(" ", 50))
+				}
 			}
 		default:
 			if !paused {
@@ -555,10 +561,12 @@ func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType)
 				progressBar := createProgressBar(progress, 30)
 				percentage := int(progress * 100)
 				// Display timer with progress bar
-				fmt.Printf("\r%s %3d%% %s",
-					progressBar,
-					percentage,
-					formatDuration(remaining))
+				if !suppressOutput {
+					fmt.Printf("\r%s %3d%% %s",
+						progressBar,
+						percentage,
+						formatDuration(remaining))
+				}
 				logger.Debug("Timer progress", map[string]interface{}{"progress": progress, "remaining": remaining, "elapsed": elapsed})
 				if remaining <= 0 {
 					break
