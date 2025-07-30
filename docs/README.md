@@ -9,21 +9,23 @@ The documentation is organized into the following key areas:
 1. **[Release Management](release-management.md)** - Release process and approval gates
 2. **[Requirements](requirements.md)** - Project requirements and specifications
 3. **[Technical Specifications](technical_specifications.md)** - Technical architecture and design
-4. **[Development Setup](development-setup.md)** - Development environment and tools
-5. **[Go Standards](go-standards.md)** - Go coding standards and conventions
-6. **[Logging Standards](logging-standards.md)** - Logging configuration and standards
-7. **[Documentation Standards](documentation-standards.md)** - Documentation guidelines and templates
-8. **[Releases](releases/)** - Historical release documentation
-9. **[Backlog](backlog/)** - Planning and requirements (current & future work)
-10. **[ADR](adr/)** - Architecture Decision Records
-11. **[Retrospectives](retrospectives/)** - Release retrospectives and lessons learned
+4. **[Configuration File Specifications](configuration_file_specifications.md)** - Configuration file structure and options
+5. **[Development Setup](development-setup.md)** - Development environment and tools
+6. **[Go Standards](go-standards.md)** - Go coding standards and conventions
+7. **[Logging Standards](logging-standards.md)** - Logging configuration and standards
+8. **[Documentation Standards](documentation-standards.md)** - Documentation guidelines and templates
+9. **[Releases](releases/)** - Historical release documentation
+10. **[Backlog](backlog/)** - Planning and requirements (current & future work)
+11. **[ADR](adr/)** - Architecture Decision Records
+12. **[Retrospectives](retrospectives/)** - Release retrospectives and lessons learned
 
 ## 🎯 Quick Navigation by Audience
 
 ### **For New Contributors**
 1. **[Development Setup](development-setup.md)** - Get started with development environment
-2. **[Go Standards](go-standards.md)** - Coding standards and practices
-3. **[Requirements](requirements.md)** - Project requirements and goals
+2. **[Configuration File Specifications](configuration_file_specifications.md)** - Configuration file structure and options
+3. **[Go Standards](go-standards.md)** - Coding standards and practices
+4. **[Requirements](requirements.md)** - Project requirements and goals
 
 ### **For Current Development**
 1. **[Release Management](release-management.md)** - Release process and approval gates
@@ -42,6 +44,7 @@ The documentation is organized into the following key areas:
 | [release-management.md](release-management.md) | Release process and approval gates | Developers, Stakeholders |
 | [requirements.md](requirements.md) | Project requirements and specifications | Stakeholders, Developers |
 | [technical_specifications.md](technical_specifications.md) | Technical architecture and design | Developers, Architects |
+| [configuration_file_specifications.md](configuration_file_specifications.md) | Configuration file structure and options | Users, Developers |
 | [development-setup.md](development-setup.md) | Development environment and tools | Developers |
 | [go-standards.md](go-standards.md) | Go coding standards and conventions | Developers |
 | [logging-standards.md](logging-standards.md) | Logging configuration and standards | Developers, DevOps |

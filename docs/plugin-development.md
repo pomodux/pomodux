@@ -1,6 +1,8 @@
 # Pomodux Plugin Development Guide
 
-This guide explains how to create plugins for Pomodux, including how to use the TUI API introduced in version 0.4.0.
+This guide explains how to create plugins for Pomodux, including how to use the TUI API introduced in version 0.4.0 and updated in version 0.6.0.
+
+> **⚠️ Important**: Release 0.6.0 introduces a complete plugin API redesign. Existing plugins will not work with the new API. See the [Migration Guide](backlog/release-0.6.0-migration-guide.md) for details.
 
 ---
 
@@ -75,7 +77,54 @@ Logs a debug message to the Pomodux log (for plugin debugging).
 
 ---
 
-## Example: Simple TUI Plugin
+## Example: Release 0.6.0 Plugin
+
+This example demonstrates how to use the new TUI API in Release 0.6.0:
+
+```lua
+-- Example Release 0.6.0 Plugin for Pomodux
+-- Demonstrates usage of the new TUI API
+
+pomodux.register_plugin({
+    name = "example_0_6_0_plugin",
+    version = "1.0.0",
+    description = "Shows how to use Pomodux TUI API in Release 0.6.0.",
+    author = "Pomodux Team"
+})
+
+-- Register a hook for timer setup (runs before timer starts)
+pomodux.register_hook("timer_setup", function(event)
+    -- Show a modal dialog
+    local confirmed = pomodux.show_modal("Welcome", "Welcome to your timer session!")
+    if not confirmed then
+        error("timer setup cancelled by user")
+    end
+
+    -- Show an auto-dismissing notification
+    pomodux.show_notification("Timer session starting...", 3)
+
+    -- Update status information
+    pomodux.update_status("Session: " .. (event.data.session_name or "Unknown"))
+
+    -- Log debug information
+    pomodux.log("Timer setup completed for session: " .. (event.data.session_name or "Unknown"))
+end)
+
+-- Register a hook for timer completion
+pomodux.register_hook("timer_completed", function(event)
+    -- Show completion notification
+    pomodux.show_notification("Great job! Session completed.", 5)
+    
+    -- Update status
+    pomodux.update_status("Last session: " .. (event.data.session_name or "Unknown"))
+end)
+
+print("✅ Example Release 0.6.0 Plugin loaded!")
+```
+
+---
+
+## Example: Simple TUI Plugin (Release 0.4.0-0.5.x)
 
 This example demonstrates how to use the TUI API in a Lua plugin for Pomodux. It shows a notification, prompts the user to select from a list, and asks for input.
 

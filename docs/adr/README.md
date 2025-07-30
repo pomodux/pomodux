@@ -12,7 +12,9 @@ docs/adr/
 ├── 003-uat-testing-approach.md            # User acceptance testing strategy
 ├── 004-plugin-system-architecture.md      # Plugin system design
 ├── 005-structured-logger-architecture.md  # Structured logging approach
-└── 006-lumberjack-log-rotation-library.md # Log rotation library selection
+├── 006-lumberjack-log-rotation-library.md # Log rotation library selection
+├── 007-tui-standardization.md             # TUI library standardization
+└── 008-global-stage-pattern.md            # Global stage pattern for TUI management
 ```
 
 ## 📋 ADR Index
@@ -48,6 +50,16 @@ docs/adr/
   - **Component**: Logging System
   - **Decision**: Lumberjack library for automatic log file rotation
   - **Impact**: Prevents log files from growing too large
+
+- **[ADR 007](007-tui-standardization.md)** - TUI Standardization ✅ **APPROVED**
+  - **Component**: User Interface
+  - **Decision**: Standardize on Bubbletea and Lipgloss for all TUI components
+  - **Impact**: Unified user experience and simplified maintenance
+
+- **[ADR 008](008-global-stage-pattern.md)** - Global Stage Pattern ✅ **APPROVED**
+  - **Component**: User Interface
+  - **Decision**: Global stage pattern for TUI component management
+  - **Impact**: Unified component management and plugin UI integration
 
 ## 🔗 Related Documentation
 

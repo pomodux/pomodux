@@ -5,10 +5,15 @@ This folder contains **planning and requirements** for current and future Pomodu
 ## Backlog Structure
 
 ### Current Release
-- **No current release planned** - Features moved to future releases
+- **[Release 0.6.0](release-0.6.0.md)** - TUI-Only Timer with File-Based Locking 🔄 PLANNING
 
 ### Planned Releases
-- **No specific releases planned** - All features are in individual files below
+- **Release 0.6.0** - TUI-Only Timer with File-Based Locking (High Priority)
+  - File-based lock manager with automatic recovery
+  - Generic session support (session name + duration)
+  - TUI-only architecture eliminating cross-process sync
+  - Enhanced plugin system with modern API
+  - Comprehensive logging and error handling
 
 ### Individual Features
 
