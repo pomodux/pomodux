@@ -57,7 +57,7 @@ func main() {
 	fmt.Println("\n=== Starting 10-second work session ===")
 
 	// Start the timer
-	if err := t.StartWithType(10*time.Second, timer.SessionTypeWork); err != nil {
+	if err := t.StartWithSessionName(10*time.Second, "work"); err != nil {
 		logger.Error("Error starting timer", err)
 		fmt.Printf("Error starting timer: %v\n", err)
 		return
@@ -102,7 +102,7 @@ func main() {
 	logger.Info("Starting 5-second break session")
 	fmt.Println("\n=== Starting 5-second break session ===")
 
-	if err := t.StartWithType(5*time.Second, timer.SessionTypeBreak); err != nil {
+	if err := t.StartWithSessionName(5*time.Second, "break"); err != nil {
 		logger.Error("Error starting timer", err)
 		fmt.Printf("Error starting timer: %v\n", err)
 		return

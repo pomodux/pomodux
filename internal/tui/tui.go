@@ -111,8 +111,8 @@ func (m Model) View() string {
 	if m.Quitting {
 		return "Exiting Pomodux...\n"
 	}
-	sessionType := m.Timer.GetSessionType()
-	title := titleStyle.Render(strings.ToUpper(string(sessionType)) + " SESSION")
+	sessionName := m.Timer.GetSessionName()
+	title := titleStyle.Render(strings.ToUpper(sessionName) + " SESSION")
 	status := "[RUNNING]"
 	if m.Paused {
 		status = "[PAUSED]"

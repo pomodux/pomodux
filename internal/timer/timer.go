@@ -21,7 +21,7 @@ import (
 type Timer struct {
 	mu             sync.Mutex
 	status         TimerStatus
-	sessionType    SessionType
+	sessionName    string
 	startTime      time.Time
 	duration       time.Duration
 	elapsed        time.Duration
@@ -56,7 +56,7 @@ func NewTimerWithManagers(stateManager *StateManager, historyManager *HistoryMan
 	// Load existing state if available
 	if state, err := stateManager.LoadState(); err == nil {
 		timer.status = state.Status
-		timer.sessionType = state.SessionType
+		timer.sessionName = state.SessionName
 		timer.duration = state.Duration
 		timer.startTime = state.StartTime
 		timer.elapsed = state.Elapsed
@@ -65,13 +65,13 @@ func NewTimerWithManagers(stateManager *StateManager, historyManager *HistoryMan
 	return timer
 }
 
-// Start begins the timer for the specified duration.
+// Start begins the timer for the specified duration with default session name.
 func (t *Timer) Start(duration time.Duration) error {
-	return t.StartWithType(duration, SessionTypeWork)
+	return t.StartWithSessionName(duration, "work")
 }
 
-// StartWithType begins the timer for the specified duration and session type.
-func (t *Timer) StartWithType(duration time.Duration, sessionType SessionType) error {
+// StartWithSessionName begins the timer for the specified duration and session name.
+func (t *Timer) StartWithSessionName(duration time.Duration, sessionName string) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.status == StatusRunning {
@@ -83,7 +83,7 @@ func (t *Timer) StartWithType(duration time.Duration, sessionType SessionType) e
 
 	// Prepare session data for plugins to potentially modify
 	sessionData := map[string]interface{}{
-		"session_type": string(sessionType),
+		"session_name": sessionName,
 		"duration":     int(duration.Seconds()),
 	}
 
@@ -106,13 +106,13 @@ func (t *Timer) StartWithType(duration time.Duration, sessionType SessionType) e
 		if modifiedDuration, ok := sessionData["duration"].(int); ok && modifiedDuration > 0 {
 			duration = time.Duration(modifiedDuration) * time.Second
 		}
-		if modifiedSessionType, ok := sessionData["session_type"].(string); ok && modifiedSessionType != "" {
-			sessionType = SessionType(modifiedSessionType)
+		if modifiedSessionName, ok := sessionData["session_name"].(string); ok && modifiedSessionName != "" {
+			sessionName = modifiedSessionName
 		}
 	}
 
 	t.duration = duration
-	t.sessionType = sessionType
+	t.sessionName = sessionName
 	t.startTime = time.Now()
 	t.elapsed = 0
 	t.status = StatusRunning
@@ -130,7 +130,7 @@ func (t *Timer) StartWithType(duration time.Duration, sessionType SessionType) e
 			Type:      plugin.EventTimerStarted,
 			Timestamp: time.Now(),
 			Data: map[string]interface{}{
-				"session_type": string(t.sessionType),
+				"session_name": t.sessionName,
 				"duration":     int(t.duration.Seconds()),
 				"start_time":   t.startTime.Unix(),
 			},
@@ -150,9 +150,9 @@ func (t *Timer) Stop() error {
 	}
 
 	// Record session in history if we have a history manager
-	if t.historyManager != nil && t.sessionType != "" {
+	if t.historyManager != nil && t.sessionName != "" {
 		session := SessionRecord{
-			Type:      t.sessionType,
+			Type:      t.sessionName,
 			Duration:  t.duration,
 			StartTime: t.startTime,
 			EndTime:   time.Now(),
@@ -180,7 +180,7 @@ func (t *Timer) Stop() error {
 			Type:      plugin.EventTimerStopped,
 			Timestamp: time.Now(),
 			Data: map[string]interface{}{
-				"session_type": string(t.sessionType),
+				"session_name": t.sessionName,
 				"duration":     int(t.duration.Seconds()),
 				"start_time":   t.startTime.Unix(),
 				"end_time":     time.Now().Unix(),
@@ -190,7 +190,7 @@ func (t *Timer) Stop() error {
 		t.pluginManager.EmitEvent(event)
 	}
 
-	logger.Info("Timer stopped", map[string]interface{}{"session_type": t.sessionType, "duration": t.duration})
+	logger.Info("Timer stopped", map[string]interface{}{"session_name": t.sessionName, "duration": t.duration})
 
 	return nil
 }
@@ -217,7 +217,7 @@ func (t *Timer) Pause() error {
 			Type:      plugin.EventTimerPaused,
 			Timestamp: time.Now(),
 			Data: map[string]interface{}{
-				"session_type": string(t.sessionType),
+				"session_name": t.sessionName,
 				"duration":     int(t.duration.Seconds()),
 				"start_time":   t.startTime.Unix(),
 				"elapsed":      int(t.elapsed.Seconds()),
@@ -226,7 +226,7 @@ func (t *Timer) Pause() error {
 		t.pluginManager.EmitEvent(event)
 	}
 
-	logger.Info("Timer paused", map[string]interface{}{"session_type": t.sessionType, "duration": t.duration})
+	logger.Info("Timer paused", map[string]interface{}{"session_name": t.sessionName, "duration": t.duration})
 
 	return nil
 }
@@ -253,7 +253,7 @@ func (t *Timer) Resume() error {
 			Type:      plugin.EventTimerResumed,
 			Timestamp: time.Now(),
 			Data: map[string]interface{}{
-				"session_type": string(t.sessionType),
+				"session_name": t.sessionName,
 				"duration":     int(t.duration.Seconds()),
 				"start_time":   t.startTime.Unix(),
 				"elapsed":      int(t.elapsed.Seconds()),
@@ -262,7 +262,7 @@ func (t *Timer) Resume() error {
 		t.pluginManager.EmitEvent(event)
 	}
 
-	logger.Info("Timer resumed", map[string]interface{}{"session_type": t.sessionType, "duration": t.duration})
+	logger.Info("Timer resumed", map[string]interface{}{"session_name": t.sessionName, "duration": t.duration})
 
 	return nil
 }
@@ -284,9 +284,9 @@ func (t *Timer) GetStatus() TimerStatus {
 				}
 			}
 			// Record session in history immediately when timer completes
-			if t.historyManager != nil && t.sessionType != "" {
+			if t.historyManager != nil && t.sessionName != "" {
 				session := SessionRecord{
-					Type:      t.sessionType,
+					Type:      t.sessionName,
 					Duration:  t.duration,
 					StartTime: t.startTime,
 					EndTime:   time.Now(),
@@ -362,9 +362,9 @@ func (t *Timer) Reset() error {
 	}
 
 	// Record session in history if we have a history manager
-	if t.historyManager != nil && t.sessionType != "" {
+	if t.historyManager != nil && t.sessionName != "" {
 		session := SessionRecord{
-			Type:      t.sessionType,
+			Type:      t.sessionName,
 			Duration:  t.duration,
 			StartTime: t.startTime,
 			EndTime:   time.Now(),
@@ -388,11 +388,11 @@ func (t *Timer) Reset() error {
 	return nil
 }
 
-// GetSessionType returns the session type of the timer
-func (t *Timer) GetSessionType() SessionType {
+// GetSessionName returns the session name of the timer
+func (t *Timer) GetSessionName() string {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.sessionType
+	return t.sessionName
 }
 
 // GetStartTime returns the start time of the timer
@@ -417,15 +417,15 @@ func (t *Timer) SetPluginManager(pluginManager *plugin.PluginManager) {
 }
 
 // StartPersistent starts a timer and blocks until completion, with live progress and keypress controls.
-func (t *Timer) StartPersistent(duration time.Duration, sessionType SessionType, suppressOutput bool) error {
-	if err := t.StartWithType(duration, sessionType); err != nil {
+func (t *Timer) StartPersistent(duration time.Duration, sessionName string, suppressOutput bool) error {
+	if err := t.StartWithSessionName(duration, sessionName); err != nil {
 		return err
 	}
 
-	logger.Info("Timer started", map[string]interface{}{"duration": duration, "session_type": sessionType})
+	logger.Info("Timer started", map[string]interface{}{"duration": duration, "session_name": sessionName})
 	if !suppressOutput {
 		fmt.Printf("Timer started for %v\n", duration)
-		fmt.Printf("Session type: %s\n", t.GetSessionType())
+		fmt.Printf("Session name: %s\n", t.GetSessionName())
 		fmt.Println("Press 'p' to pause, 'r' to resume, 'q'/'s' to stop, Ctrl+C to exit.")
 	}
 
@@ -601,9 +601,9 @@ func (t *Timer) handleCompletion() {
 	}
 
 	// Record session in history immediately
-	if t.historyManager != nil && t.sessionType != "" {
+	if t.historyManager != nil && t.sessionName != "" {
 		session := SessionRecord{
-			Type:      t.sessionType,
+			Type:      t.sessionName,
 			Duration:  t.duration,
 			StartTime: t.startTime,
 			EndTime:   time.Now(),
@@ -621,7 +621,7 @@ func (t *Timer) handleCompletion() {
 			Type:      plugin.EventTimerCompleted,
 			Timestamp: time.Now(),
 			Data: map[string]interface{}{
-				"session_type": string(t.sessionType),
+				"session_name": t.sessionName,
 				"duration":     int(t.duration.Seconds()),
 				"start_time":   t.startTime.Unix(),
 				"end_time":     time.Now().Unix(),
@@ -637,17 +637,17 @@ func (t *Timer) handleCompletion() {
 		logger.Debug("No plugin manager available for timer_completed event")
 	}
 
-	logger.Info("Timer completed", map[string]interface{}{"session_type": t.sessionType, "duration": t.duration})
+	logger.Info("Timer completed", map[string]interface{}{"session_name": t.sessionName, "duration": t.duration})
 	fmt.Print("Timer completed! Session recorded.")
 }
 
 // sendNotification sends a system notification based on session type.
 // DEPRECATED: Use plugin system for notifications instead
-func sendNotification(sessionType SessionType, status string) {
+func sendNotification(sessionName, status string) {
 	// This function is deprecated and will be removed
 	// Notifications are now handled by the plugin system
-	logger.Warn("DEPRECATED: sendNotification called - use plugin system", map[string]interface{}{"session_type": sessionType, "status": status})
-	fmt.Printf("DEPRECATED: sendNotification called for %s %s - use plugin system\n", sessionType, status)
+	logger.Warn("DEPRECATED: sendNotification called - use plugin system", map[string]interface{}{"session_name": sessionName, "status": status})
+	fmt.Printf("DEPRECATED: sendNotification called for %s %s - use plugin system\n", sessionName, status)
 }
 
 // formatDuration formats a duration in a human-readable format

@@ -12,7 +12,7 @@ import (
 // State represents the persistent timer state
 type State struct {
 	Status      TimerStatus   `json:"status"`
-	SessionType SessionType   `json:"session_type"`
+	SessionName string        `json:"session_name"`
 	Duration    time.Duration `json:"duration"`
 	StartTime   time.Time     `json:"start_time"`
 	Elapsed     time.Duration `json:"elapsed"`
@@ -42,7 +42,7 @@ func (sm *StateManager) SaveState(timer *Timer) error {
 
 	state := State{
 		Status:      timer.status,
-		SessionType: timer.sessionType,
+		SessionName: timer.sessionName,
 		Duration:    timer.duration,
 		StartTime:   timer.startTime,
 		Elapsed:     timer.elapsed,

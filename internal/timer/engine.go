@@ -6,12 +6,13 @@ import "time"
 // for Pomodux timer operations.
 type TimerEngine interface {
 	Start(duration time.Duration) error
+	StartWithSessionName(duration time.Duration, sessionName string) error
 	Stop() error
 	Pause() error
 	Resume() error
 	GetStatus() TimerStatus
 	GetProgress() float64
-	GetSessionType() SessionType
+	GetSessionName() string
 }
 
 // TimerStatus represents the state of the timer.
@@ -24,11 +25,4 @@ const (
 	StatusCompleted TimerStatus = "completed"
 )
 
-// SessionType represents the type of timer session.
-type SessionType string
-
-const (
-	SessionTypeWork      SessionType = "work"
-	SessionTypeBreak     SessionType = "break"
-	SessionTypeLongBreak SessionType = "long-break"
-)
+// Session type constants removed - sessions now use generic string names

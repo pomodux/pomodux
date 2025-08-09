@@ -91,7 +91,7 @@ func filterSessions(sessions []timer.SessionRecord, sessionType, date string) []
 
 	for _, session := range sessions {
 		// Filter by session type
-		if sessionType != "" && string(session.Type) != sessionType {
+		if sessionType != "" && session.Type != sessionType {
 			continue
 		}
 
@@ -122,16 +122,22 @@ func showStatistics(sessions []timer.SessionRecord) {
 	for _, session := range sessions {
 		actualDuration := session.EndTime.Sub(session.StartTime)
 
-		switch session.Type {
-		case timer.SessionTypeWork:
+		// Categorize sessions based on common session name patterns
+		sessionType := strings.ToLower(session.Type)
+		switch {
+		case sessionType == "work" || sessionType == "focus" || sessionType == "deep work" || sessionType == "coding":
 			workSessions++
 			totalWorkTime += actualDuration
-		case timer.SessionTypeBreak:
+		case sessionType == "break" || sessionType == "short break":
 			breakSessions++
 			totalBreakTime += actualDuration
-		case timer.SessionTypeLongBreak:
+		case sessionType == "long-break" || sessionType == "long break":
 			longBreakSessions++
 			totalBreakTime += actualDuration
+		default:
+			// Treat unknown session types as work sessions
+			workSessions++
+			totalWorkTime += actualDuration
 		}
 
 		if session.Completed {
@@ -174,7 +180,7 @@ func outputHistoryJSON(sessions []timer.SessionRecord) error {
 	var output []sessionOutput
 	for _, session := range sessions {
 		output = append(output, sessionOutput{
-			Type:           string(session.Type),
+			Type:           session.Type,
 			Duration:       formatDuration(session.Duration),
 			StartTime:      session.StartTime,
 			EndTime:        session.EndTime,
@@ -201,7 +207,7 @@ func outputHistoryCSV(sessions []timer.SessionRecord) error {
 	// Write data
 	for _, session := range sessions {
 		row := []string{
-			string(session.Type),
+			session.Type,
 			formatDuration(session.Duration),
 			session.StartTime.Format("2006-01-02 15:04:05"),
 			session.EndTime.Format("2006-01-02 15:04:05"),
@@ -267,7 +273,7 @@ func exportHistory(sessions []timer.SessionRecord, filepath string, jsonFormat, 
 		// Write data
 		for _, session := range sessions {
 			row := []string{
-				string(session.Type),
+				session.Type,
 				formatDuration(session.Duration),
 				session.StartTime.Format("2006-01-02 15:04:05"),
 				session.EndTime.Format("2006-01-02 15:04:05"),

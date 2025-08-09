@@ -11,7 +11,7 @@ import (
 
 // SessionRecord represents a completed timer session
 type SessionRecord struct {
-	Type      SessionType   `json:"type"`
+	Type      string        `json:"type"`
 	Duration  time.Duration `json:"duration"`
 	StartTime time.Time     `json:"start_time"`
 	EndTime   time.Time     `json:"end_time"`

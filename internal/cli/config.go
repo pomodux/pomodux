@@ -399,11 +399,13 @@ func getProductivityTemplate() *config.Config {
 			DefaultWorkDuration      time.Duration `yaml:"default_work_duration"`
 			DefaultBreakDuration     time.Duration `yaml:"default_break_duration"`
 			DefaultLongBreakDuration time.Duration `yaml:"default_long_break_duration"`
+			DefaultSessionName       string        `yaml:"default_session_name"`
 			AutoStartBreaks          bool          `yaml:"auto_start_breaks"`
 		}{
 			DefaultWorkDuration:      25 * time.Minute,
 			DefaultBreakDuration:     5 * time.Minute,
 			DefaultLongBreakDuration: 15 * time.Minute,
+			DefaultSessionName:       "work",
 			AutoStartBreaks:          false,
 		},
 		TUI: struct {
@@ -436,11 +438,13 @@ func getShortBreaksTemplate() *config.Config {
 			DefaultWorkDuration      time.Duration `yaml:"default_work_duration"`
 			DefaultBreakDuration     time.Duration `yaml:"default_break_duration"`
 			DefaultLongBreakDuration time.Duration `yaml:"default_long_break_duration"`
+			DefaultSessionName       string        `yaml:"default_session_name"`
 			AutoStartBreaks          bool          `yaml:"auto_start_breaks"`
 		}{
 			DefaultWorkDuration:      45 * time.Minute,
 			DefaultBreakDuration:     3 * time.Minute,
 			DefaultLongBreakDuration: 10 * time.Minute,
+			DefaultSessionName:       "work",
 			AutoStartBreaks:          false,
 		},
 		TUI: struct {
@@ -473,11 +477,13 @@ func getLongBreaksTemplate() *config.Config {
 			DefaultWorkDuration      time.Duration `yaml:"default_work_duration"`
 			DefaultBreakDuration     time.Duration `yaml:"default_break_duration"`
 			DefaultLongBreakDuration time.Duration `yaml:"default_long_break_duration"`
+			DefaultSessionName       string        `yaml:"default_session_name"`
 			AutoStartBreaks          bool          `yaml:"auto_start_breaks"`
 		}{
 			DefaultWorkDuration:      90 * time.Minute,
 			DefaultBreakDuration:     15 * time.Minute,
 			DefaultLongBreakDuration: 30 * time.Minute,
+			DefaultSessionName:       "work",
 			AutoStartBreaks:          false,
 		},
 		TUI: struct {

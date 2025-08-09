@@ -241,12 +241,12 @@ func TestStartPersistent(t *testing.T) {
 	t.Run("StartPersistentBasic", func(t *testing.T) {
 		timer := NewTimer()
 		duration := 100 * time.Millisecond
-		sessionType := SessionTypeWork
+		sessionName := "work"
 
 		// Start persistent timer in a goroutine
 		errChan := make(chan error, 1)
 		go func() {
-			errChan <- timer.StartPersistent(duration, sessionType, true)
+			errChan <- timer.StartPersistent(duration, sessionName, true)
 		}()
 
 		// Wait for timer to complete
@@ -267,15 +267,15 @@ func TestStartPersistent(t *testing.T) {
 		}
 	})
 
-	t.Run("StartPersistentWithSessionType", func(t *testing.T) {
+	t.Run("StartPersistentWithSessionName", func(t *testing.T) {
 		timer := NewTimer()
 		duration := 50 * time.Millisecond
-		sessionType := SessionTypeBreak
+		sessionName := "break"
 
 		// Start persistent timer in a goroutine
 		errChan := make(chan error, 1)
 		go func() {
-			errChan <- timer.StartPersistent(duration, sessionType, true)
+			errChan <- timer.StartPersistent(duration, sessionName, true)
 		}()
 
 		// Wait for timer to complete
@@ -290,18 +290,18 @@ func TestStartPersistent(t *testing.T) {
 			t.Error("StartPersistent should complete within expected time")
 		}
 
-		// Verify session type was set correctly
-		if timer.GetSessionType() != sessionType {
-			t.Errorf("expected session type %s, got %s", sessionType, timer.GetSessionType())
+		// Verify session name was set correctly
+		if timer.GetSessionName() != sessionName {
+			t.Errorf("expected session name %s, got %s", sessionName, timer.GetSessionName())
 		}
 	})
 
 	t.Run("StartPersistentInvalidDuration", func(t *testing.T) {
 		timer := NewTimer()
 		duration := 0 * time.Millisecond
-		sessionType := SessionTypeWork
+		sessionName := "work"
 
-		err := timer.StartPersistent(duration, sessionType, true)
+		err := timer.StartPersistent(duration, sessionName, true)
 		if err == nil {
 			t.Error("StartPersistent should return error for zero duration")
 		}
@@ -310,7 +310,7 @@ func TestStartPersistent(t *testing.T) {
 	t.Run("StartPersistentAlreadyRunning", func(t *testing.T) {
 		timer := NewTimer()
 		duration := 100 * time.Millisecond
-		sessionType := SessionTypeWork
+		sessionName := "work"
 
 		// Start a regular timer first
 		err := timer.Start(duration)
@@ -319,7 +319,7 @@ func TestStartPersistent(t *testing.T) {
 		}
 
 		// Try to start persistent timer while already running
-		err = timer.StartPersistent(duration, sessionType, true)
+		err = timer.StartPersistent(duration, sessionName, true)
 		if err == nil {
 			t.Error("StartPersistent should return error when timer already running")
 		}

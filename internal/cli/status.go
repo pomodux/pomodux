@@ -26,11 +26,33 @@ func init() {
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
+	// Check for lock conflicts first
+	lockManager, err := timer.NewTimerLockManager()
+	if err != nil {
+		return fmt.Errorf("failed to initialize lock manager: %v", err)
+	}
+
+	// Try to read lock state to provide better status information
+	lockState, lockErr := lockManager.ReadLockState()
+	if lockErr == nil {
+		// There's a lock file, check if it's for another process
+		currentPID := os.Getpid()
+		if lockState.PID != currentPID {
+			// Another process may be running a timer
+			remaining := time.Duration(lockState.Duration)*time.Second - time.Since(lockState.StartTime)
+			if remaining > 0 {
+				return fmt.Errorf("timer running in another process (PID %d): %s session with %s remaining",
+					lockState.PID, lockState.SessionName, formatDuration(remaining))
+			}
+			cmd.PrintErrln("Warning: Timer in another process may have completed, run 'pomodux start' to begin new session")
+		}
+	}
+
 	t := timer.GetGlobalTimer()
 
 	status := t.GetStatus()
 	progress := t.GetProgress()
-	sessionType := t.GetSessionType()
+	sessionName := t.GetSessionName()
 	startTime := t.GetStartTime()
 	duration := t.GetDuration()
 	elapsed := t.GetElapsed()
@@ -42,7 +64,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	statusInfo := map[string]interface{}{
 		"status":       status,
-		"session_type": sessionType,
+		"session_name": sessionName,
 		"start_time":   startTime.Format(time.RFC3339),
 		"duration":     duration.Seconds(),
 		"elapsed":      elapsed.Seconds(),
@@ -59,7 +81,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	logger.Debug("Status info", statusInfo)
 
 	fmt.Printf("Status:        %s\n", status)
-	fmt.Printf("Session Type:  %s\n", sessionType)
+	fmt.Printf("Session Name:  %s\n", sessionName)
 	fmt.Printf("Start Time:    %s\n", startTime.Format("2006-01-02 15:04:05"))
 	fmt.Printf("Duration:      %s\n", formatDuration(duration))
 	fmt.Printf("Elapsed:       %s\n", formatDuration(elapsed))

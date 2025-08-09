@@ -34,6 +34,7 @@ type Config struct {
 		DefaultWorkDuration      time.Duration `yaml:"default_work_duration"`
 		DefaultBreakDuration     time.Duration `yaml:"default_break_duration"`
 		DefaultLongBreakDuration time.Duration `yaml:"default_long_break_duration"`
+		DefaultSessionName       string        `yaml:"default_session_name"`
 		AutoStartBreaks          bool          `yaml:"auto_start_breaks"`
 	} `yaml:"timer"`
 
@@ -73,6 +74,7 @@ func DefaultConfig() *Config {
 	config.Timer.DefaultWorkDuration = 25 * time.Minute
 	config.Timer.DefaultBreakDuration = 5 * time.Minute
 	config.Timer.DefaultLongBreakDuration = 15 * time.Minute
+	config.Timer.DefaultSessionName = "work"
 	config.Timer.AutoStartBreaks = false
 
 	// TUI defaults
@@ -268,6 +270,9 @@ func Validate(config *Config) error {
 	}
 	if config.Timer.DefaultLongBreakDuration <= 0 {
 		return fmt.Errorf("default long break duration must be positive")
+	}
+	if config.Timer.DefaultSessionName == "" {
+		return fmt.Errorf("default session name cannot be empty")
 	}
 
 	// Validate logging configuration
