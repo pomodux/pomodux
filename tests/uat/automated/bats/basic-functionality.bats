@@ -71,16 +71,16 @@ teardown() {
 
 
 
-@test "help command should show break command" {
+@test "help command should show status command" {
     run "$APP_BINARY" --help
     [ "$status" -eq 0 ]
-    [[ "$output" =~ "break" ]]
+    [[ "$output" =~ "status" ]]
 }
 
-@test "help command should show long-break command" {
+@test "help command should show plugin command" {
     run "$APP_BINARY" --help
     [ "$status" -eq 0 ]
-    [[ "$output" =~ "long-break" ]]
+    [[ "$output" =~ "plugin" ]]
 }
 
 @test "help command should show config command" {

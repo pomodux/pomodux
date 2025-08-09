@@ -94,21 +94,21 @@ teardown() {
     [ "$status" -eq 0 ]
 }
 
-@test "break command should work" {
-    # Test that break command works
-    run "$APP_BINARY" break
+@test "start command should work with break session name" {
+    # Test that start command works with break session name
+    run "$APP_BINARY" start 5s "break"
     if [ "$status" -ne 0 ]; then
-        echo "Break command failed with status $status"
+        echo "Start break command failed with status $status"
         echo "Output: $output"
     fi
     [ "$status" -eq 0 ]
 }
 
-@test "long-break command should work" {
-    # Test that long-break command works
-    run "$APP_BINARY" long-break
+@test "start command should work with long-break session name" {
+    # Test that start command works with long-break session name
+    run "$APP_BINARY" start 5s "long-break"
     if [ "$status" -ne 0 ]; then
-        echo "Long-break command failed with status $status"
+        echo "Start long-break command failed with status $status"
         echo "Output: $output"
     fi
     [ "$status" -eq 0 ]
@@ -156,9 +156,9 @@ teardown() {
     rm -f output.txt
 }
 
-@test "break command should show break session" {
+@test "start command with break session should show break session" {
     # Start a break and check for break session
-    timeout 3s "$APP_BINARY" break > output.txt 2>&1 &
+    timeout 3s "$APP_BINARY" start 5s "break" > output.txt 2>&1 &
     timer_pid=$!
     sleep 1
     
@@ -170,9 +170,9 @@ teardown() {
     rm -f output.txt
 }
 
-@test "long-break command should show long break session" {
+@test "start command with long-break session should show long break session" {
     # Start a long break and check for long break session
-    timeout 3s "$APP_BINARY" long-break > output.txt 2>&1 &
+    timeout 3s "$APP_BINARY" start 5s "long-break" > output.txt 2>&1 &
     timer_pid=$!
     sleep 1
     

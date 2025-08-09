@@ -154,8 +154,8 @@ func (lm *TimerLockManager) AcquireLock(sessionName string, duration time.Durati
 	}
 
 	if _, err := lockFd.Write(data); err != nil {
-		lockFd.Close()
-		os.Remove(lm.lockFile)
+		_ = lockFd.Close()
+		_ = os.Remove(lm.lockFile)
 		return fmt.Errorf("failed to write lock state: %w", err)
 	}
 
