@@ -1,6 +1,6 @@
 # GitHub Issues Setup for Pomodux
 
-This directory contains the GitHub Issues configuration for the Pomodux project, designed to support the 4-gate approval process and release-based development approach.
+This directory contains the GitHub Issues configuration for the Pomodux project, designed to support the 4-gate approval process and continuous development approach.
 
 ## Issue Templates
 
@@ -13,7 +13,7 @@ Use this template for new feature requests that align with the Pomodux roadmap.
 - Proposing new commands or features
 
 **Key sections:**
-- Release alignment (which release this belongs to)
+- Feature alignment with project architecture
 - User story format
 - Acceptance criteria
 - Technical requirements (TDD, test coverage)
@@ -66,12 +66,12 @@ Use this template for tracking User Acceptance Testing.
 1. Choose the appropriate template
 2. Fill in all required sections
 3. Add appropriate labels
-4. Assign to the correct release milestone
+4. Add appropriate component and priority labels
 
 ### 2. Issue Triage
 - All new issues start with `needs-triage` label
 - Review and categorize the issue
-- Assign priority and release
+- Assign priority and component
 - Remove `needs-triage` label
 
 ### 3. Development Process
@@ -114,45 +114,38 @@ Use this template for tracking User Acceptance Testing.
 - `configuration` - Configuration management
 - `testing` - Testing and quality assurance
 
-## Milestones
+## Project Architecture
 
-### Release 0.1.0: Foundation & Core Timer Engine ✅
-- **Status**: Complete
-- **Focus**: Basic timer functionality and project foundation
+**Core Components:**
+- **Timer Engine**: State management, persistence, and session tracking
+- **CLI Interface**: Cobra-based commands with completion and configuration
+- **Plugin System**: Lua-based extensibility with event hooks
+- **Configuration**: XDG-compliant YAML configuration system
+- **TUI System**: Terminal interface with Bubbletea framework
 
-### Release 0.2.0: CLI Interface & Basic Functionality
-- **Status**: Planning
-- **Focus**: Enhanced CLI features and Pomodoro support
-
-### Release 0.3.0: Terminal UI (TUI) Development
-- **Status**: Future
-- **Focus**: Rich terminal interface with Bubbletea
-
-### Release 0.4.0: Plugin System & Advanced Features
-- **Status**: Future
-- **Focus**: Lua-based plugin system and advanced features
+For detailed technical information, see [Architecture Decision Records](../docs/adr/).
 
 ## Requirements Management
 
-The main project requirements are maintained in `docs/requirements.md` and include:
+The main project requirements are maintained in documentation and include:
 
-- **Epics** organized by release
 - **User Stories** with acceptance criteria
-- **Technical Tasks** with TDD requirements
+- **Technical Tasks** with TDD requirements  
 - **Bug fixes** and improvements
 - **Non-functional requirements**
+- **Architecture decisions** documented in ADRs
 
-### Creating Issues from Backlog
-1. Reference the requirement in `docs/requirements.md`
+### Creating Issues from Architecture
+1. Reference relevant Architecture Decision Records
 2. Use the appropriate template
-3. Copy relevant information from the backlog
-4. Add issue-specific details and context
+3. Include technical context and constraints
+4. Add component-specific implementation details
 
-### Updating Backlog
-- Update backlog when issues are created
-- Mark items as completed when issues are closed
-- Add new items as they are identified
-- Reprioritize based on feedback and requirements
+### Architecture Alignment
+- Ensure issues align with approved ADRs
+- Update documentation when decisions change
+- Add new architectural decisions as needed
+- Prioritize based on technical debt and user needs
 
 ## Best Practices
 
@@ -180,13 +173,13 @@ The main project requirements are maintained in `docs/requirements.md` and inclu
 
 The GitHub configuration is set up to:
 - Require issue templates (no blank issues)
-- Provide links to documentation
+- Provide links to documentation  
 - Support the 4-gate approval process
-- Align with release-based development
+- Align with continuous development
 
 ## Resources
 
 - [Pomodux Documentation](../docs/)
-- [Release Management Guide](../docs/release-management.md)
-- [Implementation Roadmap](../docs/implementation-roadmap.md)
+- [Architecture Decision Records](../docs/adr/)
+- [Development Setup](../docs/development-setup.md)
 - [Go Development Standards](../docs/go-standards.md) 

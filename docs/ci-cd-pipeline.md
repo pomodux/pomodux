@@ -235,7 +235,7 @@ To create a new release:
 3. **Verify the release**:
    - Check that all platform binaries are created
    - Verify UAT tests pass
-   - Review release notes
+   - Review deployment success
 
 #### 4.1.3 Tag Best Practices
 
@@ -297,8 +297,8 @@ For each release, the following artifacts are created:
 3. **Checksums file**:
    - `pomodux-{version}-checksums.txt` with SHA256 hashes
 
-4. **Release notes**:
-   - Generated from git log and external documentation
+4. **Build artifacts**:
+   - Generated platform binaries and checksums
 
 #### 3.3.2 GitHub Release
 
@@ -306,7 +306,7 @@ The workflow automatically creates a GitHub release with:
 - Release name and description
 - All platform binaries as downloadable assets
 - Checksums for verification
-- Release notes
+- Build artifacts
 
 ## 5.0 Workflow Integration
 
@@ -354,7 +354,7 @@ uat-tests:
 **Release Requirements**:
 - All release artifacts created successfully
 - Multi-platform builds verified
-- Release notes complete
+- Build artifacts verified
 - Installation procedures tested
 
 **Workflow Integration**:
@@ -472,8 +472,7 @@ git push origin --delete v0.0.1-test
 
 1. **Prepare release documentation**:
    ```bash
-   # Update external release documentation
-   # ~/Documents/pomodux/releases/
+   # Update release documentation as needed
    ```
 
 2. **Final testing**:
@@ -604,7 +603,7 @@ The pipeline includes multiple security checks:
 - **Slack notifications**: Add notifications for build status
 - **JIRA integration**: Link releases to JIRA tickets
 - **Metrics dashboard**: Create dashboard for pipeline metrics
-- **Automated changelog**: Generate changelog from commit messages
+- **Automated builds**: Generate platform-specific binaries
 
 ---
 

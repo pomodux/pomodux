@@ -344,4 +344,4 @@ logging:
 
 - [Plugin Development Guide](plugin-development.md) - Plugin configuration details
 - [Development Setup](development-setup.md) - Development environment configuration
-- [Release History](~/Documents/pomodux/releases/) - Historical configuration changes 
+- [ADR](adr/) - Architecture decisions affecting configuration 

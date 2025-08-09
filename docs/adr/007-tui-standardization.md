@@ -8,7 +8,7 @@ type: technical
 ## 1. Context / Background
 
 Pomodux has historically used two different TUI libraries:
-- **Bubbletea** for the main timer interface (from release 0.5.0)
+- **Bubbletea** for the main timer interface
 - **rivo/tview** for plugin-driven dialogs (modals, lists, prompts)
 
 This mixed approach led to inconsistencies in user experience, increased maintenance complexity, and confusion for contributors. As the project matures, a unified TUI stack is needed for maintainability and a consistent look and feel.
@@ -18,7 +18,7 @@ This mixed approach led to inconsistencies in user experience, increased mainten
 **Pomodux will standardize on Bubbletea for all user-facing TUI, including the main timer interface and all plugin dialogs.**
 
 - All new TUI features must use Bubbletea and its ecosystem (e.g., bubbles components).
-- Existing plugin dialogs implemented with tview will be migrated to Bubbletea in release 0.5.1.
+- Existing plugin dialogs implemented with tview will be migrated to Bubbletea.
 - **Theming (colors, styles, UI elements) will be standardized across all Bubbletea-based UI, including the main timer and plugin dialogs, to ensure a consistent look and feel.**
 - **Lipgloss will be used as the standard library for theming and styling all Bubbletea-based UI. A shared theme (defined with Lipgloss) will be used across the application.**
 
@@ -58,11 +58,10 @@ This mixed approach led to inconsistencies in user experience, increased mainten
 ## 7. Status
 
 - **Approved** (2025-07-21)
-- Migration scheduled for release 0.5.1
+- Migration planned for future implementation
 
 ## 8. References
 
-- [Release 0.5.0 Notes](../releases/release-0.5.0.md)
 - [Bubbletea Documentation](https://github.com/charmbracelet/bubbletea)
 - [Lipgloss Documentation](https://github.com/charmbracelet/lipgloss)
 - [tview Documentation](https://github.com/rivo/tview) 

@@ -27,7 +27,7 @@ A clear description of the test scenario and what should be validated.
 ### Test Environment
 - **OS**: [e.g., Linux Arch, macOS, Windows]
 - **Go Version**: [e.g., go version go1.21.0 linux/amd64]
-- **Pomodux Version**: [e.g., 0.1.0]
+- **Pomodux Version**: [e.g., git commit hash or branch name]
 - **Shell**: [e.g., zsh, bash]
 - **Terminal**: [e.g., iTerm2, GNOME Terminal, Windows Terminal]
 

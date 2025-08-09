@@ -242,7 +242,7 @@ main "$@"
 ```
 
 ### 6.2 Phase 2: Automated Test Framework Integration
-**Duration**: Future implementation (Release 0.3.0+)
+**Duration**: Future implementation
 **Deliverables**:
 - BATS test suite for automated testing
 - CI/CD integration

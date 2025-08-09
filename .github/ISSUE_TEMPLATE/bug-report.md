@@ -26,7 +26,7 @@ A clear and concise description of what you expected to happen.
 ### Environment
 - **OS**: [e.g., Linux Arch, macOS, Windows]
 - **Go Version**: [e.g., go version go1.21.0 linux/amd64]
-- **Pomodux Version**: [e.g., 0.1.0]
+- **Pomodux Version**: [e.g., git commit hash or branch name]
 - **Shell**: [e.g., zsh, bash]
 
 ### Error Details

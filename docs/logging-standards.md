@@ -1,8 +1,8 @@
 # Logging Standards for Pomodux
 
-> **Status**: ✅ **ACTIVE** - Implemented in Release 0.3.0  
-> **Last Updated**: 2025-01-27  
-> **Related**: [Go Standards](go-standards.md), [Release 0.3.0](releases/release-0.3.0.md), [ADR 005](adr/005-structured-logger-architecture.md)
+> **Status**: ✅ **ACTIVE** - Current implementation  
+> **Last Updated**: 2025-08-09  
+> **Related**: [Go Standards](go-standards.md), [ADR 005](adr/005-structured-logger-architecture.md)
 
 ## Overview
 
@@ -336,7 +336,6 @@ func (c *StartCmd) Run(cmd *cobra.Command, args []string) error {
 - **[ADR 005: Structured Logger Architecture](adr/005-structured-logger-architecture.md)** - Architectural decision record for logging system design
 - **[Logrus Documentation](https://github.com/sirupsen/logrus)** - Official Logrus documentation
 - **[Go Standards](go-standards.md)** - General Go development standards
-- **[Release 0.3.0](releases/release-0.3.0.md)** - Structured logging implementation details
 - **[Configuration Guide](development-setup.md)** - Logging configuration setup
 
 ---

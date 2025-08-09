@@ -15,18 +15,33 @@ help:
 	@echo "  tools       - Install development tools"
 	@echo "  setup       - Setup development environment"
 	@echo "  ci-check    - Run all CI checks locally"
-	@echo "  create-release VERSION=x.y.z - Create a new release"
+	@echo "  version     - Show current version information"
 
-VERSION ?= 0.4.3
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
+# Git-based version information
+VERSION ?= $(shell git describe --tags --always --dirty)
+GIT_COMMIT := $(shell git rev-parse HEAD)
 BUILD_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# Ldflags for embedding version information
+LDFLAGS = -X 'main.Version=$(VERSION)' \
+          -X 'main.GitCommit=$(GIT_COMMIT)' \
+          -X 'main.BuildDate=$(BUILD_DATE)' \
+          -X 'github.com/pomodux/pomodux/internal/cli.Version=$(VERSION)' \
+          -X 'github.com/pomodux/pomodux/internal/cli.BuildDate=$(BUILD_DATE)' \
+          -X 'github.com/pomodux/pomodux/internal/cli.Commit=$(GIT_COMMIT)'
 
 # Build the application
 build:
 	@echo "Building pomodux..."
-	go build -ldflags "-X 'main.Version=$(VERSION)' -X 'github.com/pomodux/pomodux/internal/cli.Version=$(VERSION)' -X 'github.com/pomodux/pomodux/internal/cli.BuildDate=$(BUILD_DATE)' -X 'github.com/pomodux/pomodux/internal/cli.Commit=$(GIT_COMMIT)'" -o bin/pomodux cmd/pomodux/main.go
+	go build -ldflags "$(LDFLAGS)" -o bin/pomodux cmd/pomodux/main.go
 	@echo "Build complete: bin/pomodux"
 	@bin/pomodux --help > /dev/null 2>&1 && echo "Build verification successful!" || echo "Build verification successful! (help requested)"
+
+# Show version information
+version:
+	@echo "Version: $(VERSION)"
+	@echo "Git Commit: $(GIT_COMMIT)"
+	@echo "Build Date: $(BUILD_DATE)"
 
 # Run tests
 test:

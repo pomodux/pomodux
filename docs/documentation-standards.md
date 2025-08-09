@@ -18,7 +18,7 @@
 |------|---------|----------|----------|
 | **Process Documentation** | How to do things | Developers, Stakeholders | `docs/` |
 | **Technical Documentation** | How things work | Developers, Architects | `docs/` |
-| **Historical Records** | What was delivered | All stakeholders | `~/Documents/pomodux/releases/` |
+| **Historical Records** | What was delivered | All stakeholders | External systems |
 | **Planning Documents** | What needs to be done | Stakeholders, Developers | `docs/requirements.md` |
 | **Architecture Records** | Why decisions were made | Developers, Architects | `docs/adr/` |
 | **Index Documentation** | Navigation and organization | All users | `docs/*/README.md` |

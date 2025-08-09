@@ -22,7 +22,7 @@ A powerful terminal-based timer and Pomodoro application built in Go, designed f
 - **Advanced Notifications**: Enhanced notification system
 - **Performance Optimizations**: Improved performance and resource usage
 - Plugin system and advanced features
-- **TUI**: Planned for future release (deferred from 0.5.0)
+- **TUI**: Terminal User Interface implementation
 
 ## 🛠️ Installation
 
@@ -114,8 +114,6 @@ For detailed development commands, testing procedures, and build instructions, s
 - **[Development Setup](docs/development-setup.md)** - Development environment and tools
 - **[Go Standards](docs/go-standards.md)** - Go coding standards and conventions
 - **[Release Management](docs/release-management.md)** - Release process and approval gates
-- **[Releases](~/Documents/pomodux/releases/)** - Historical release documentation (external)
-- **[Requirements](docs/requirements.md)** - Project requirements and specifications
 - **[ADR](docs/adr/)** - Architecture Decision Records
 
 ## 🤝 Contributing
@@ -139,15 +137,6 @@ Pomodux follows a structured 4-gate approval process:
 - Use golangci-lint for code quality
 - Document all public APIs
 
-## 📊 Quality Metrics
-
-### Release 0.1.0
-- **Test Coverage**: 80%+ overall, 95%+ critical paths
-- **Performance**: < 2 second startup time
-- **Memory Usage**: < 50MB during operation
-- **Cross-Platform**: Linux, macOS, Windows support
-- **Documentation**: Complete technical and user documentation
-
 ## 🔧 Configuration
 
 Pomodux uses XDG-compliant configuration:
@@ -168,28 +157,18 @@ cli:
 
 ## 🐛 Known Issues
 
-### Release 0.1.0
-- None - all issues resolved and closed
+Currently tracking issues in GitHub Issues. See [GitHub Issues](https://github.com/pomodux/pomodux/issues) for active bugs and feature requests.
 
-## 📈 Roadmap
+## 📈 Future Development
 
-### Release 0.3.0 (In Planning)
-- Enhanced CLI functionality and user experience
-- Plugin system architecture and foundation
-- Advanced notification system
-- Performance optimizations
-
-### Release 0.4.0 (Planned)
-- Lua-based plugin system
-- Advanced features and integrations
-- Enhanced extensibility
-
-### TUI Development
-- **Status**: Deferred from Release 0.5.0 (not implemented)
-- **Reason**: Technical complexity with cross-process synchronization
-- **Future**: Will be reconsidered when simpler approach is identified
+- Enhanced CLI functionality and user experience  
+- Plugin system development and community extensions
+- Terminal User Interface (TUI) implementation
+- Advanced notification and integration features
 - Custom workflows and automation
 - Extended configuration options
+
+For detailed technical plans, see [Architecture Decision Records](docs/adr/).
 
 ## 📄 License
 
@@ -203,4 +182,4 @@ cli:
 
 ---
 
-**Note**: Pomodux is actively developed following a structured release process. For the latest updates, check the [releases page](https://github.com/yourusername/pomodux/releases) and [issue tracker](https://github.com/yourusername/pomodux/issues).
+**Note**: Pomodux is actively developed with continuous integration. For the latest updates, check the [issue tracker](https://github.com/yourusername/pomodux/issues) and [Architecture Decision Records](docs/adr/).

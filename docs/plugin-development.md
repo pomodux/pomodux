@@ -1,8 +1,8 @@
 # Pomodux Plugin Development Guide
 
-This guide explains how to create plugins for Pomodux using the current plugin API (Release 0.4.x).
+This guide explains how to create plugins for Pomodux using the current plugin API.
 
-> **📋 Note**: Plugin system is currently stable as of Release 0.4.3. Future API enhancements may be planned but no breaking changes are currently scheduled.
+> **📋 Note**: Plugin system is currently stable. Future API enhancements may be planned but no breaking changes are currently scheduled.
 
 ---
 
@@ -56,7 +56,7 @@ The `event` argument is a table with:
 
 ---
 
-## Plugin API Functions (Release 0.4.x)
+## Plugin API Functions
 
 Pomodux exposes several TUI functions to plugins via the `pomodux` table:
 
@@ -77,18 +77,18 @@ Logs a debug message to the Pomodux log (for plugin debugging).
 
 ---
 
-## Example: Current Plugin API
+## Example: Plugin Implementation
 
-This example demonstrates how to use the current plugin API (Release 0.4.x):
+This example demonstrates how to use the plugin API:
 
 ```lua
--- Example Plugin for Pomodux (Release 0.4.x)
--- Demonstrates usage of the current Plugin API
+-- Example Plugin for Pomodux
+-- Demonstrates usage of the Plugin API
 
 pomodux.register_plugin({
     name = "example_plugin",
     version = "1.0.0",
-    description = "Shows how to use Pomodux Plugin API (Release 0.4.x).",
+    description = "Shows how to use Pomodux Plugin API.",
     author = "Pomodux Team"
 })
 
@@ -121,7 +121,7 @@ print("✅ Example Plugin loaded!")
 
 ---
 
-## Example: Simple TUI Plugin (Release 0.4.0-0.5.x)
+## Example: TUI Plugin
 
 This example demonstrates how to use the TUI API in a Lua plugin for Pomodux. It shows a notification, prompts the user to select from a list, and asks for input.
 
@@ -199,5 +199,4 @@ plugins:
 
 ## More Resources
 - See `config/pomodux/plugins/` for more plugin examples.
-- See `docs/technical_specifications.md` for API details.
-- See `~/Documents/pomodux/releases/release-0.4.0.md` for TUI API release notes. 
+- See [ADR 004](adr/004-plugin-system-architecture.md) for plugin architecture decisions. 

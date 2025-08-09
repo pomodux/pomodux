@@ -7,7 +7,7 @@ type: technical
 
 ## 1. Context / Background
 
-Release 0.6.0 introduces a TUI-only architecture that eliminates cross-process synchronization by running all timer operations within a single Bubbletea application. This requires a unified approach to managing multiple UI components, including:
+Future TUI architecture will introduce a TUI-only design that eliminates cross-process synchronization by running all timer operations within a single Bubbletea application. This requires a unified approach to managing multiple UI components, including:
 
 - **Timer Window**: Primary timer display and controls
 - **Plugin Modals**: Plugin-driven dialog windows
@@ -142,13 +142,11 @@ type GlobalStage struct {
 ## 7. Status
 
 - **Approved** (2025-01-27)
-- Implementation scheduled for Release 0.6.0 Phase 2
+- Implementation planned for future development
 
 ## 8. References
 
 - [ADR 007: TUI Standardization](007-tui-standardization.md)
-- [Release 0.6.0 Planning](../backlog/release-0.6.0.md)
-- [Technical Specifications](../backlog/release-0.6.0-technical-specs.md)
 - [Bubbletea Documentation](https://github.com/charmbracelet/bubbletea)
 - [teatest Framework](https://github.com/charmbracelet/x/exp/teatest)
 

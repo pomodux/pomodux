@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	Version   = "0.3.3"
-	BuildDate = "unknown"
-	Commit    = "unknown"
+	Version   = "dev"     // Set via -ldflags during build
+	BuildDate = "unknown" // Set via -ldflags during build
+	Commit    = "unknown" // Set via -ldflags during build
 )
 
 var versionCmd = &cobra.Command{

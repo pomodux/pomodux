@@ -11,8 +11,12 @@ import (
 	"github.com/pomodux/pomodux/internal/timer"
 )
 
-// Version will be set during build time via ldflags
-var Version = "0.3.3"
+// Version information embedded at build time
+var (
+	Version   = "dev"     // Set via -ldflags during build
+	GitCommit = "unknown" // Set via -ldflags during build
+	BuildDate = "unknown" // Set via -ldflags during build
+)
 
 func main() {
 	// Get config file path from flag (will be parsed during Execute)

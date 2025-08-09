@@ -8,11 +8,13 @@ assignees: ''
 
 ## Feature Request
 
-### Release Alignment
-- [ ] Release 0.1.0 - Foundation & Core Timer Engine
-- [ ] Release 0.2.0 - CLI Interface & Basic Functionality  
-- [ ] Release 0.3.0 - Terminal UI (TUI) Development
-- [ ] Release 0.4.0 - Plugin System & Advanced Features
+### Component Alignment
+- [ ] Timer Engine - Core timer functionality and state management
+- [ ] CLI Interface - Command-line interface and user interaction  
+- [ ] TUI System - Terminal user interface development
+- [ ] Plugin System - Plugin architecture and extensibility
+- [ ] Configuration - Configuration management and standards
+- [ ] Testing - Testing framework and quality assurance
 
 ### Feature Description
 **What feature would you like to see implemented?**
