@@ -1,8 +1,8 @@
 # Pomodux Plugin Development Guide
 
-This guide explains how to create plugins for Pomodux, including how to use the TUI API introduced in version 0.4.0 and updated in version 0.6.0.
+This guide explains how to create plugins for Pomodux using the current plugin API (Release 0.4.x).
 
-> **⚠️ Important**: Release 0.6.0 introduces a complete plugin API redesign. Existing plugins will not work with the new API. See the [Migration Guide](backlog/release-0.6.0-migration-guide.md) for details.
+> **📋 Note**: Plugin system is currently stable as of Release 0.4.3. Future API enhancements may be planned but no breaking changes are currently scheduled.
 
 ---
 
@@ -56,7 +56,7 @@ The `event` argument is a table with:
 
 ---
 
-## TUI API Functions (since 0.4.0)
+## Plugin API Functions (Release 0.4.x)
 
 Pomodux exposes several TUI functions to plugins via the `pomodux` table:
 
@@ -77,49 +77,46 @@ Logs a debug message to the Pomodux log (for plugin debugging).
 
 ---
 
-## Example: Release 0.6.0 Plugin
+## Example: Current Plugin API
 
-This example demonstrates how to use the new TUI API in Release 0.6.0:
+This example demonstrates how to use the current plugin API (Release 0.4.x):
 
 ```lua
--- Example Release 0.6.0 Plugin for Pomodux
--- Demonstrates usage of the new TUI API
+-- Example Plugin for Pomodux (Release 0.4.x)
+-- Demonstrates usage of the current Plugin API
 
 pomodux.register_plugin({
-    name = "example_0_6_0_plugin",
+    name = "example_plugin",
     version = "1.0.0",
-    description = "Shows how to use Pomodux TUI API in Release 0.6.0.",
+    description = "Shows how to use Pomodux Plugin API (Release 0.4.x).",
     author = "Pomodux Team"
 })
 
 -- Register a hook for timer setup (runs before timer starts)
 pomodux.register_hook("timer_setup", function(event)
-    -- Show a modal dialog
-    local confirmed = pomodux.show_modal("Welcome", "Welcome to your timer session!")
-    if not confirmed then
-        error("timer setup cancelled by user")
-    end
-
-    -- Show an auto-dismissing notification
-    pomodux.show_notification("Timer session starting...", 3)
-
-    -- Update status information
-    pomodux.update_status("Session: " .. (event.data.session_name or "Unknown"))
-
+    -- Show a notification dialog
+    local confirmed = pomodux.show_notification("Welcome to your timer session!")
+    
     -- Log debug information
-    pomodux.log("Timer setup completed for session: " .. (event.data.session_name or "Unknown"))
+    pomodux.log("Timer setup completed")
 end)
 
 -- Register a hook for timer completion
 pomodux.register_hook("timer_completed", function(event)
     -- Show completion notification
-    pomodux.show_notification("Great job! Session completed.", 5)
-    
-    -- Update status
-    pomodux.update_status("Last session: " .. (event.data.session_name or "Unknown"))
+    pomodux.show_notification("Great job! Session completed.")
 end)
 
-print("✅ Example Release 0.6.0 Plugin loaded!")
+-- Register a hook for timer start
+pomodux.register_hook("timer_started", function(event)
+    -- Example of selecting from list
+    local option, confirmed = pomodux.select_from_list("Break Type", {"Short Break", "Long Break", "Continue Working"})
+    if confirmed then
+        pomodux.log("User selected option: " .. option)
+    end
+end)
+
+print("✅ Example Plugin loaded!")
 ```
 
 ---
@@ -203,4 +200,4 @@ plugins:
 ## More Resources
 - See `config/pomodux/plugins/` for more plugin examples.
 - See `docs/technical_specifications.md` for API details.
-- See `docs/releases/release-0.4.0.md` for TUI API release notes. 
+- See `~/Documents/pomodux/releases/release-0.4.0.md` for TUI API release notes. 

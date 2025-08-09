@@ -6,7 +6,7 @@
 
 ### 1.1 Required Software
 
-- **Go 1.21+**: [Download from golang.org](https://golang.org/dl/)
+- **Go 1.21+** (minimum), **Go 1.24.4+** recommended: [Download from golang.org](https://golang.org/dl/)
 - **Git**: [Download from git-scm.com](https://git-scm.com/)
 - **Make**: Usually pre-installed on Linux/macOS, [download for Windows](https://www.gnu.org/software/make/)
 - **golangci-lint**: [Installation instructions](https://golangci-lint.run/usage/install/)
@@ -354,6 +354,8 @@ issues:
 
 ## 5.0 Build Best Practices
 
+> **Quick Reference**: For common build commands, see [CLAUDE.md](../CLAUDE.md). This section provides detailed guidance and best practices.
+
 ### 5.1 Build Commands and Locations
 
 **IMPORTANT**: Always build to the `bin/` directory, never to the project root.
@@ -533,52 +535,15 @@ profile-http:
 
 ## 7.0 Continuous Integration
 
-### 7.1 GitHub Actions Setup
+### 7.1 CI/CD Pipeline Integration
 
-Create `.github/workflows/ci.yml`:
+The development environment integrates with the comprehensive CI/CD pipeline system:
 
-```yaml
-name: CI
+- **Local CI Checks**: Use `make ci-check` to run the same checks that run in CI
+- **Pipeline Configuration**: See [CI/CD Pipeline Documentation](ci-cd-pipeline.md) for complete workflow setup
+- **Quick Reference**: See [CI/CD Pipeline - Section 1.0](ci-cd-pipeline.md#10-quick-reference-guide) for daily operations
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: [1.21, 1.22]
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Go ${{ matrix.go-version }}
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
-
-    - name: Install dependencies
-      run: go mod download
-
-    - name: Run linter
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: latest
-
-    - name: Run tests
-      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.txt
-        flags: unittests
-        name: codecov-umbrella
-```
+The CI pipeline automatically runs when you push code or create pull requests, ensuring code quality through automated testing, linting, and multi-platform builds.
 
 ## 8.0 Troubleshooting
 

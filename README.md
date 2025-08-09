@@ -2,17 +2,8 @@
 
 A powerful terminal-based timer and Pomodoro application built in Go, designed for productivity and time management.
 
-
-## 🚀 Current Status
-
-**Release 0.1.0** ✅ **COMPLETE** - Foundation and Core Timer Engine released on 2025-07-26  
-**Release 0.2.0** ✅ **COMPLETE** - CLI Interface & Basic Functionality released on 2025-01-27  
-**Release 0.2.1** ✅ **COMPLETE** - Persistent Timer with Keypress Controls released on 2025-01-27  
-**Release 0.3.0** 🔄 **IN PLANNING** - CLI Improvements & Plugin System Foundation (Gate 1 Pending)
-
 ## 📋 Features
 
-### ✅ Released (v0.1.0, v0.2.0, v0.2.1)
 - **Core Timer Engine**: Robust timer with state management
 - **Persistent Timer Sessions**: Interactive keypress controls (p, r, q, s, Ctrl+C)
 - **Real-time Progress Display**: Visual progress bars and time remaining
@@ -25,20 +16,18 @@ A powerful terminal-based timer and Pomodoro application built in Go, designed f
 - **Cross-Platform**: Linux, macOS, and Windows support
 - **Comprehensive Testing**: 80%+ test coverage with TDD approach
 
-### 🔄 Planned (v0.3.0)
+### 🔄 Planned
 - **Enhanced CLI Functionality**: Improved status reporting and user experience
 - **Plugin System Foundation**: Architecture for extensibility
 - **Advanced Notifications**: Enhanced notification system
 - **Performance Optimizations**: Improved performance and resource usage
-
-### 📋 Future Releases
-- **v0.4.0**: Plugin system and advanced features
-- **TUI**: See [TUI Development Documentation](docs/tui-development.md) for details
+- Plugin system and advanced features
+- **TUI**: Planned for future release (deferred from 0.5.0)
 
 ## 🛠️ Installation
 
 ### Prerequisites
-- Go 1.21 or later
+- Go 1.21+ (minimum), Go 1.24.4+ recommended
 - Git
 
 ### Build from Source
@@ -91,22 +80,12 @@ pomodux/
 ## 🧪 Development
 
 ### Prerequisites
-- Go 1.24.4+
+- Go 1.21+ (minimum), Go 1.24.4+ recommended
 - golangci-lint
 - Make
 
 ### Development Setup
-```bash
-# Clone and setup
-git clone https://github.com/yourusername/pomodux.git
-cd pomodux
-
-# Install development tools and setup environment
-make setup
-
-# Run all CI checks locally
-make ci-check
-```
+See [CLAUDE.md](CLAUDE.md) for complete development commands and setup instructions.
 
 ### CI/CD Pipeline
 
@@ -124,33 +103,9 @@ Pomodux uses a comprehensive CI/CD pipeline with automated testing, linting, and
 ```
 
 For detailed information, see:
-- [CI/CD Quick Start Guide](docs/ci-cd-quickstart.md)
-- [Full CI/CD Documentation](docs/ci-cd-pipeline.md)
+- [CI/CD Pipeline Documentation](docs/ci-cd-pipeline.md) - Complete guide with quick reference
 
-# Install dependencies
-go mod download
-
-# Run tests
-make test
-
-# Build binary
-make build
-
-# Run linter
-make lint
-```
-
-### Testing
-```bash
-# Run all tests
-make test
-
-# Run tests with coverage
-make test-coverage
-
-# Run specific test package
-go test ./internal/timer/...
-```
+For detailed development commands, testing procedures, and build instructions, see [CLAUDE.md](CLAUDE.md).
 
 ## 📚 Documentation
 
@@ -159,8 +114,8 @@ go test ./internal/timer/...
 - **[Development Setup](docs/development-setup.md)** - Development environment and tools
 - **[Go Standards](docs/go-standards.md)** - Go coding standards and conventions
 - **[Release Management](docs/release-management.md)** - Release process and approval gates
-- **[Releases](docs/releases/)** - Historical release documentation
-- **[Backlog](docs/backlog/)** - Planning and requirements (current & future work)
+- **[Releases](~/Documents/pomodux/releases/)** - Historical release documentation (external)
+- **[Requirements](docs/requirements.md)** - Project requirements and specifications
 - **[ADR](docs/adr/)** - Architecture Decision Records
 
 ## 🤝 Contributing
@@ -175,7 +130,7 @@ Pomodux follows a structured 4-gate approval process:
 ### Issue Management
 - Use GitHub issue templates for bug reports and feature requests
 - Follow TDD (Test-Driven Development) approach
-- Reference the backlog in `docs/backlog/` for planning and requirements
+- Reference requirements and technical specifications for planning
 - Link issues to appropriate release milestones
 
 ### Code Standards
@@ -230,9 +185,9 @@ cli:
 - Enhanced extensibility
 
 ### TUI Development
-- See [TUI Development Documentation](docs/tui-development.md) for details
-- Moved to backlog due to complexity
-- Will be reconsidered when simpler approach is identified
+- **Status**: Deferred from Release 0.5.0 (not implemented)
+- **Reason**: Technical complexity with cross-process synchronization
+- **Future**: Will be reconsidered when simpler approach is identified
 - Custom workflows and automation
 - Extended configuration options
 

@@ -105,14 +105,8 @@ jobs:
     - name: Generate release notes
       id: release_notes
       run: |
-        # Extract release notes from RELEASE_NOTES.md or create from git log
-        if [ -f "RELEASE_NOTES.md" ]; then
-          # Look for section matching this version
-          awk '/^## v'"${{ steps.version.outputs.version }}"'/,/^## /' RELEASE_NOTES.md | head -n -1 > release_notes.txt
-        else
-          # Generate from git log since last tag
-          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD > release_notes.txt
-        fi
+        # Generate release notes from git log since last tag
+        git log --pretty=format:"- %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD > release_notes.txt
         
         # If no release notes found, create a default one
         if [ ! -s release_notes.txt ]; then

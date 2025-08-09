@@ -344,4 +344,4 @@ logging:
 
 - [Plugin Development Guide](plugin-development.md) - Plugin configuration details
 - [Development Setup](development-setup.md) - Development environment configuration
-- [Release Notes](../RELEASE_NOTES.md) - Configuration changes in releases 
+- [Release History](~/Documents/pomodux/releases/) - Historical configuration changes 

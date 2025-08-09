@@ -290,7 +290,7 @@ func (t *Timer) Start(duration time.Duration) error {
 ### 4.1 Required Tools
 
 #### Core Tools
-- **Go 1.21+**: Minimum Go version for the project
+- **Go 1.21+**: Minimum Go version for the project (Go 1.24.4+ recommended for development)
 - **gofmt**: Code formatting (built into Go)
 - **golangci-lint**: Comprehensive linting
 - **go test**: Testing framework

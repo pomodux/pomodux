@@ -136,4 +136,7 @@ PKGBUILD
 
 # Configuration files with sensitive data
 config.local.yaml
-config.prod.yaml 
+config.prod.yaml
+
+# Test reports (temporary artifacts)
+tests/reports/ 

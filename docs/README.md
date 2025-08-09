@@ -1,41 +1,50 @@
 # Pomodux Documentation
 
-This directory contains comprehensive documentation for the Pomodux project, organized to support development, planning, and historical reference.
+This directory contains permanent documentation for the Pomodux project, focused on long-term value and development support.
 
 ## 📚 Documentation Structure
 
-The documentation is organized into the following key areas:
+The repository documentation includes:
 
 1. **[Release Management](release-management.md)** - Release process and approval gates
-2. **[Requirements](requirements.md)** - Project requirements and specifications
+2. **[Requirements](requirements.md)** - Project requirements and specifications  
 3. **[Technical Specifications](technical_specifications.md)** - Technical architecture and design
 4. **[Configuration File Specifications](configuration_file_specifications.md)** - Configuration file structure and options
 5. **[Development Setup](development-setup.md)** - Development environment and tools
 6. **[Go Standards](go-standards.md)** - Go coding standards and conventions
 7. **[Logging Standards](logging-standards.md)** - Logging configuration and standards
 8. **[Documentation Standards](documentation-standards.md)** - Documentation guidelines and templates
-9. **[Releases](releases/)** - Historical release documentation
-10. **[Backlog](backlog/)** - Planning and requirements (current & future work)
-11. **[ADR](adr/)** - Architecture Decision Records
-12. **[Retrospectives](retrospectives/)** - Release retrospectives and lessons learned
+9. **[Plugin Development](plugin-development.md)** - Plugin development guidelines
+10. **[CI/CD Pipeline](ci-cd-pipeline.md)** - Comprehensive CI/CD automation and daily operations
+11. **[Code Review](code-review.md)** - Code quality assessment and recommendations
+12. **[ADR](adr/)** - Architecture Decision Records
+
+## 📁 External Documentation
+
+Planning and temporary documentation is maintained externally to keep the repository focused:
+
+- **Planning & Backlog**: `~/Documents/pomodux/planning/` - Current and future feature planning
+- **Implementation Plans**: `~/Documents/pomodux/implementation-plans/` - Detailed feature implementation docs  
+- **Historical Records**: `~/Documents/pomodux/releases/` - Historical release documentation
+- **Release Retrospectives**: `~/Documents/pomodux/history/` - Release retrospectives and lessons learned
 
 ## 🎯 Quick Navigation by Audience
 
 ### **For New Contributors**
 1. **[Development Setup](development-setup.md)** - Get started with development environment
-2. **[Configuration File Specifications](configuration_file_specifications.md)** - Configuration file structure and options
-3. **[Go Standards](go-standards.md)** - Coding standards and practices
+2. **[Go Standards](go-standards.md)** - Coding standards and practices
+3. **[Configuration File Specifications](configuration_file_specifications.md)** - Configuration file structure and options
 4. **[Requirements](requirements.md)** - Project requirements and goals
 
 ### **For Current Development**
 1. **[Release Management](release-management.md)** - Release process and approval gates
-2. **[Backlog](backlog/)** - Planning and requirements for current/future work
-3. **[Technical Specifications](technical_specifications.md)** - Technical architecture and design
+2. **[Technical Specifications](technical_specifications.md)** - Technical architecture and design
+3. **External Planning**: `~/Documents/pomodux/planning/` - Feature planning and backlog
 
 ### **For Historical Reference**
-1. **[Releases](releases/)** - What was actually delivered in each release
-2. **[Retrospectives](retrospectives/)** - Lessons learned and improvements
-3. **[ADR](adr/)** - Architecture decision records and process
+1. **[ADR](adr/)** - Architecture decision records and rationale
+2. **External Releases**: `~/Documents/pomodux/releases/` - What was actually delivered in each release
+3. **External History**: `~/Documents/pomodux/history/` - Retrospectives and lessons learned
 
 ## 📋 Documentation by Purpose
 
@@ -49,10 +58,10 @@ The documentation is organized into the following key areas:
 | [go-standards.md](go-standards.md) | Go coding standards and conventions | Developers |
 | [logging-standards.md](logging-standards.md) | Logging configuration and standards | Developers, DevOps |
 | [documentation-standards.md](documentation-standards.md) | Documentation guidelines and templates | All contributors |
-| [releases/](releases/) | Historical release documentation | All stakeholders |
-| [backlog/](backlog/) | Planning and requirements | Stakeholders, Developers |
+| [plugin-development.md](plugin-development.md) | Plugin development guidelines | Plugin developers |
+| [ci-cd-pipeline.md](ci-cd-pipeline.md) | CI/CD automation and daily operations | Developers, DevOps |
+| [code-review.md](code-review.md) | Code quality assessment and recommendations | Senior developers, Architects |
 | [adr/](adr/) | Architecture Decision Records | Developers, Architects |
-| [retrospectives/](retrospectives/) | Release retrospectives and lessons learned | All stakeholders |
 
 ## 📊 Current Status
 
@@ -71,22 +80,22 @@ The documentation is organized into the following key areas:
 
 ### 🔗 Key Documentation
 - **[Release Management](release-management.md)** - Complete release process and standards
-- **[Backlog](backlog/)** - Planning and requirements for future work
-- **[Releases](releases/)** - Historical records of completed releases
+- **External Planning**: `~/Documents/pomodux/planning/` - Feature planning and backlog
+- **External Releases**: `~/Documents/pomodux/releases/` - Historical records of completed releases
 
 ## 🔄 Documentation Workflow
 
 ### **Development Process**
-1. **Planning**: Requirements defined in `backlog/`
-2. **Development**: Work tracked in current release
+1. **Planning**: Requirements defined in external planning directory
+2. **Development**: Work tracked using `.claude/commands/plan-and-implement.md` pattern
 3. **Release**: Historical record created in `releases/`
-4. **Retrospective**: Lessons learned documented
+4. **Retrospective**: Lessons learned documented in external history directory
 
 ### **Documentation Standards**
-- Follow established templates and formats
-- Include clear purpose and audience
-- Maintain cross-references and links
-- Update regularly as project evolves
+- **Permanent Documentation**: Only commit documentation with long-term value
+- **Temporary Documentation**: Use external directories for planning and implementation docs
+- **Structured Development**: Follow `.claude/commands/plan-and-implement.md` pattern for features
+- **Clear Organization**: Separate repository docs from external planning materials
 
 ## 🎯 Key Principles
 
@@ -111,6 +120,6 @@ The documentation is organized into the following key areas:
 
 ---
 
-**Note**: This documentation structure supports the Pomodux development process while following industry best practices. The `backlog/` folder contains planning and requirements, while `releases/` contains historical records of what was delivered.
+**Note**: This streamlined documentation structure follows the principle of keeping permanent documentation in the repository while maintaining planning and temporary documentation externally. This reduces repository complexity while maintaining comprehensive project documentation.
 
-**Last Updated:** 2025-01-27 
+**Last Updated:** 2025-08-09 

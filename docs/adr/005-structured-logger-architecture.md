@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: approved
 version: 0.1
 type: technical
 ---

@@ -2,9 +2,109 @@
 
 > **Note:** This document describes the comprehensive CI/CD pipeline for Pomodux, including continuous integration, automated releases, and multi-platform builds.
 
-## 1.0 Pipeline Overview
+## 1.0 Quick Reference Guide
 
-### 1.1 Pipeline Architecture
+> **⚡ Quick reference for daily CI/CD operations**
+
+### 1.1 Prerequisites
+
+- Go 1.21+ (minimum), Go 1.24.4+ recommended  
+- Git
+- GitHub repository with Actions enabled
+
+### 1.2 Daily Development Workflow
+
+#### Feature Development
+```bash
+# Create feature branch
+git checkout -b feature/new-feature
+
+# Develop with TDD
+# ... write tests and implement features ...
+
+# Run CI checks locally (see CLAUDE.md for build commands)
+make ci-check
+
+# Commit and push
+git add .
+git commit -m "Add new feature"
+git push origin feature/new-feature
+```
+
+#### Pull Request Process
+1. Create pull request on GitHub
+2. CI workflow runs automatically
+3. Address any issues found
+4. Merge when all checks pass
+
+### 1.3 Creating a Release
+
+#### Option 1: Using the Release Script (Recommended)
+```bash
+# Ensure you're on main branch
+git checkout main
+
+# Create release (replace 1.2.3 with your version)
+./scripts/release.sh 1.2.3
+```
+
+#### Option 2: Using Make
+```bash
+# Create release (replace 1.2.3 with your version)
+make create-release VERSION=1.2.3
+```
+
+#### Option 3: Manual Process
+```bash
+# 1. Update version in internal/cli/version.go
+# 2. Commit changes
+git add .
+git commit -m "Release v1.2.3"
+
+# 3. Create and push tag
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+### 1.4 Monitoring & Troubleshooting
+
+#### Check Status
+- **GitHub Actions**: https://github.com/[username]/pomodux/actions
+- **Releases**: https://github.com/[username]/pomodux/releases
+
+#### Local Verification
+```bash
+# Run all CI checks locally
+make ci-check
+
+# Test multi-platform builds
+make build-all
+
+# Run UAT tests
+./tests/uat/automated/run-tests.sh
+```
+
+#### Common Issues
+**CI fails locally but passes on GitHub**:
+```bash
+make clean
+make install
+make ci-check
+```
+
+**Release workflow fails**:
+```bash
+# Check tag format and retry
+git tag -d v1.2.3
+git push origin --delete v1.2.3
+./scripts/release.sh 1.2.3
+```
+
+---
+
+## 2.0 Pipeline Overview
+
+### 2.1 Pipeline Architecture
 
 The Pomodux CI/CD pipeline consists of two main workflows:
 
@@ -19,7 +119,7 @@ The Pomodux CI/CD pipeline consists of two main workflows:
    - Publishes GitHub releases
    - Runs UAT tests on release builds
 
-### 1.2 Pipeline Integration with Release Management
+### 2.2 Pipeline Integration with Release Management
 
 The CI/CD pipeline integrates seamlessly with the [Release Management Process](release-management.md):
 
@@ -27,9 +127,9 @@ The CI/CD pipeline integrates seamlessly with the [Release Management Process](r
 - **Gate 3 (User Acceptance)**: UAT tests run automatically in CI
 - **Gate 4 (Release Approval)**: Release workflow creates final artifacts
 
-## 2.0 CI Workflow Details
+## 3.0 CI Workflow Details
 
-### 2.1 Triggers
+### 3.1 Triggers
 
 ```yaml
 on:
@@ -43,14 +143,14 @@ The CI workflow runs on:
 - Every push to `main` or `develop` branches
 - Every pull request targeting `main` or `develop` branches
 
-### 2.2 Jobs
+### 3.2 Jobs
 
-#### 2.2.1 Test Job
+#### 3.2.1 Test Job
 
 **Purpose**: Run unit tests with multiple Go versions
 
 **Features**:
-- Matrix testing with Go 1.24.4 and 1.25.0
+- Matrix testing with Go 1.24.4 and 1.25.0 (supports Go 1.21+ minimum)
 - Race condition detection
 - Coverage reporting
 - Integration with Codecov
@@ -59,7 +159,7 @@ The CI workflow runs on:
 - Test results and coverage metrics
 - Coverage report uploaded to Codecov
 
-#### 2.2.2 Lint Job
+#### 3.2.2 Lint Job
 
 **Purpose**: Ensure code quality and style consistency
 
@@ -68,7 +168,7 @@ The CI workflow runs on:
 - Checks for common Go issues
 - Enforces coding standards
 
-#### 2.2.3 Build Job
+#### 3.2.3 Build Job
 
 **Purpose**: Verify the application builds successfully
 
@@ -77,7 +177,7 @@ The CI workflow runs on:
 - Verifies the binary is executable
 - Uploads build artifacts for later use
 
-#### 2.2.4 Security Job
+#### 3.2.4 Security Job
 
 **Purpose**: Identify security vulnerabilities
 
@@ -86,7 +186,7 @@ The CI workflow runs on:
 - Checks for common security issues
 - Reports vulnerabilities in code
 
-#### 2.2.5 UAT Tests Job
+#### 3.2.5 UAT Tests Job
 
 **Purpose**: Run User Acceptance Tests
 
@@ -95,11 +195,11 @@ The CI workflow runs on:
 - Runs automated UAT tests
 - Uploads test results as artifacts
 
-## 3.0 Release Workflow Details
+## 4.0 Release Workflow Details
 
-### 3.1 Git Tag Strategy
+### 4.1 Git Tag Strategy
 
-#### 3.1.1 Tag Format
+#### 4.1.1 Tag Format
 
 The release workflow uses semantic versioning tags:
 
@@ -112,7 +212,7 @@ v{major}.{minor}.{patch}
 - `v1.1.0` - Minor release with new features
 - `v1.1.1` - Patch release with bug fixes
 
-#### 3.1.2 Creating a Release
+#### 4.1.2 Creating a Release
 
 To create a new release:
 
@@ -137,16 +237,16 @@ To create a new release:
    - Verify UAT tests pass
    - Review release notes
 
-#### 3.1.3 Tag Best Practices
+#### 4.1.3 Tag Best Practices
 
 - **Use semantic versioning**: Follow `MAJOR.MINOR.PATCH` format
 - **Tag from main branch**: Always create release tags from the main branch
-- **Include release notes**: Update `RELEASE_NOTES.md` before tagging
+- **Document release**: Ensure release is documented in external release history
 - **Test before tagging**: Ensure CI passes before creating a release tag
 
-### 3.2 Multi-Platform Builds
+### 4.2 Multi-Platform Builds
 
-#### 3.2.1 Supported Platforms
+#### 4.2.1 Supported Platforms
 
 The release workflow builds for the following platforms:
 
@@ -159,7 +259,7 @@ The release workflow builds for the following platforms:
 | Windows | amd64 | `pomodux-windows-amd64.exe` | `.zip` |
 | Windows | arm64 | `pomodux-windows-arm64.exe` | `.zip` |
 
-#### 3.2.2 Build Configuration
+#### 4.2.2 Build Configuration
 
 **Build flags used**:
 ```bash
@@ -170,7 +270,7 @@ The release workflow builds for the following platforms:
 - `-w`: Strip DWARF symbol table (smaller binaries)
 - `-X main.Version=$VERSION`: Inject version information
 
-#### 3.2.3 Version Injection
+#### 4.2.3 Version Injection
 
 The build process injects version information into the binary:
 
@@ -181,7 +281,7 @@ var Version = "dev"
 
 During release builds, this is set to the actual version (e.g., "1.2.0").
 
-### 3.3 Release Artifacts
+### 4.3 Release Artifacts
 
 #### 3.3.1 Generated Files
 
@@ -198,7 +298,7 @@ For each release, the following artifacts are created:
    - `pomodux-{version}-checksums.txt` with SHA256 hashes
 
 4. **Release notes**:
-   - Extracted from `RELEASE_NOTES.md` or generated from git log
+   - Generated from git log and external documentation
 
 #### 3.3.2 GitHub Release
 
@@ -208,9 +308,9 @@ The workflow automatically creates a GitHub release with:
 - Checksums for verification
 - Release notes
 
-## 4.0 Workflow Integration
+## 5.0 Workflow Integration
 
-### 4.1 Integration with Approval Gates
+### 5.1 Integration with Approval Gates
 
 #### 4.1.1 Gate 2: Development Completion
 
@@ -267,7 +367,7 @@ release:
   # Runs final UAT verification
 ```
 
-### 4.2 Quality Gates
+### 5.2 Quality Gates
 
 #### 4.2.1 Required Checks
 
@@ -299,9 +399,9 @@ Before a release can be approved, the following must pass:
 - Delete failed tag and re-tag
 - Re-run release workflow
 
-## 5.0 Local Development
+## 6.0 Local Development
 
-### 5.1 Testing the Pipeline Locally
+### 6.1 Testing the Pipeline Locally
 
 #### 5.1.1 Running CI Checks Locally
 
@@ -343,7 +443,7 @@ git tag -d v0.0.1-test
 git push origin --delete v0.0.1-test
 ```
 
-### 5.2 Development Workflow
+### 6.2 Development Workflow
 
 #### 5.2.1 Feature Development
 
@@ -370,10 +470,10 @@ git push origin --delete v0.0.1-test
 
 #### 5.2.2 Release Preparation
 
-1. **Update release notes**:
+1. **Prepare release documentation**:
    ```bash
-   # Edit RELEASE_NOTES.md
-   # Add new version section
+   # Update external release documentation
+   # ~/Documents/pomodux/releases/
    ```
 
 2. **Final testing**:
@@ -391,9 +491,9 @@ git push origin --delete v0.0.1-test
    git push origin v1.2.0
    ```
 
-## 6.0 Monitoring and Maintenance
+## 7.0 Monitoring and Maintenance
 
-### 6.1 Pipeline Monitoring
+### 7.1 Pipeline Monitoring
 
 #### 6.1.1 GitHub Actions Dashboard
 
@@ -410,7 +510,7 @@ Track the following metrics:
 - **UAT pass rate**: Percentage of successful UAT runs
 - **Release frequency**: Time between releases
 
-### 6.2 Maintenance Tasks
+### 7.2 Maintenance Tasks
 
 #### 6.2.1 Regular Updates
 
@@ -425,7 +525,7 @@ Track the following metrics:
 - **Release artifacts**: Automatically cleaned up after 90 days
 - **Test reports**: Automatically cleaned up after 30 days
 
-### 6.3 Troubleshooting
+### 7.3 Troubleshooting
 
 #### 6.3.1 Common Issues
 
@@ -467,9 +567,9 @@ Track the following metrics:
    - Look for specific error messages
    - Verify environment variables
 
-## 7.0 Security Considerations
+## 8.0 Security Considerations
 
-### 7.1 Security Scanning
+### 8.1 Security Scanning
 
 The pipeline includes multiple security checks:
 
@@ -477,21 +577,21 @@ The pipeline includes multiple security checks:
 - **Dependency scanning**: GitHub's automated dependency scanning
 - **Code review**: Manual security review in pull requests
 
-### 7.2 Secrets Management
+### 8.2 Secrets Management
 
 - **No secrets in workflows**: All secrets are managed through GitHub Secrets
 - **Minimal permissions**: Workflows use minimal required permissions
 - **Audit trail**: All workflow runs are logged and auditable
 
-### 7.3 Binary Security
+### 8.3 Binary Security
 
 - **Stripped binaries**: Release binaries are stripped of debug information
 - **Checksums**: All binaries include SHA256 checksums for verification
 - **Reproducible builds**: Build process is deterministic and reproducible
 
-## 8.0 Future Enhancements
+## 9.0 Future Enhancements
 
-### 8.1 Planned Improvements
+### 9.1 Planned Improvements
 
 - **Docker images**: Add Docker image builds for containerized deployment
 - **Homebrew formula**: Automate Homebrew formula updates
@@ -499,7 +599,7 @@ The pipeline includes multiple security checks:
 - **Signing**: Add GPG signing for release binaries
 - **Performance testing**: Add performance benchmarks to CI
 
-### 8.2 Integration Opportunities
+### 9.2 Integration Opportunities
 
 - **Slack notifications**: Add notifications for build status
 - **JIRA integration**: Link releases to JIRA tickets

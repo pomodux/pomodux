@@ -284,8 +284,8 @@ bats --verbose tests/uat/automated/bats/basic-functionality.bats
 ## 🔗 Related Documentation
 
 - **[Release Management](docs/release-management.md)** - Release process and approval gates
-- **[Backlog](docs/backlog/)** - Planning and requirements (current & future work)
-- **[Releases](docs/releases/)** - Historical release documentation
+- **[Requirements](../../docs/requirements.md)** - Project requirements and specifications
+- **[Releases](~/Documents/pomodux/releases/)** - Historical release documentation (external)
 
 ## Contributing
 
