@@ -26,6 +26,7 @@ timer:
   default_work_duration: 25m
   default_break_duration: 5m
   default_long_break_duration: 15m
+  default_session_name: "work"
   auto_start_breaks: false
 
 # TUI Configuration
@@ -70,6 +71,7 @@ Controls the default timer durations and behavior.
 | `default_work_duration` | Duration | `25m` | Default duration for work sessions |
 | `default_break_duration` | Duration | `5m` | Default duration for break sessions |
 | `default_long_break_duration` | Duration | `15m` | Default duration for long break sessions |
+| `default_session_name` | String | `"work"` | Default session name when none specified |
 | `auto_start_breaks` | Boolean | `false` | Automatically start breaks after work sessions |
 
 **Duration Format**: Use Go duration format (e.g., `25m`, `1h30m`, `90s`)
@@ -80,6 +82,7 @@ timer:
   default_work_duration: 45m
   default_break_duration: 10m
   default_long_break_duration: 20m
+  default_session_name: "work"
   auto_start_breaks: true
 ```
 
@@ -247,6 +250,7 @@ timer:
   default_work_duration: 5m
   default_break_duration: 1m
   default_long_break_duration: 3m
+  default_session_name: "dev"
 
 logging:
   level: "debug"
@@ -266,6 +270,7 @@ timer:
   default_work_duration: 45m
   default_break_duration: 15m
   default_long_break_duration: 30m
+  default_session_name: "focus"
   auto_start_breaks: true
 
 notifications:

@@ -32,10 +32,8 @@ EOF
 }
 
 teardown() {
-    # Stop any running timer
-    if [ -f "$APP_BINARY" ]; then
-        "$APP_BINARY" stop > /dev/null 2>&1 || true
-    fi
+    # Note: stop command removed from CLI - timers will complete naturally
+    # or can be stopped via TUI if needed
     
     # Restore original config
     if [ -f "${CONFIG_DIR}/config.json.backup" ]; then

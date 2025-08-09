@@ -44,7 +44,7 @@ make vendor         # Generate vendor directory
 
 **Timer Engine** (`internal/timer/`): Central timer functionality with state management, persistence, and session tracking. Uses interfaces for extensibility and supports work/break/long-break session types.
 
-**CLI Interface** (`internal/cli/`): Cobra-based command structure with commands for start, stop, pause, resume, status, history, and break management. Supports shell completion and configuration.
+**CLI Interface** (`internal/cli/`): Cobra-based command structure with commands for start, status, history, config, plugin, version, and break management. Timer control (pause/resume/stop) available in TUI. Supports shell completion and configuration.
 
 **Configuration** (`internal/config/`): XDG-compliant configuration management with YAML support. Handles default settings and validation.
 

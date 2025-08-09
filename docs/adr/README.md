@@ -14,7 +14,11 @@ docs/adr/
 ├── 005-structured-logger-architecture.md  # Structured logging approach
 ├── 006-lumberjack-log-rotation-library.md # Log rotation library selection
 ├── 007-tui-standardization.md             # TUI library standardization
-└── 008-global-stage-pattern.md            # Global stage pattern for TUI management
+├── 008-global-stage-pattern.md            # Global stage pattern for TUI management
+├── 009-file-based-timer-locking.md        # File-based locking strategy
+├── 010-generic-session-architecture.md    # Generic session naming system
+├── 011-tui-first-command-architecture.md  # TUI-first command approach
+└── 012-configuration-hot-reload.md        # Configuration hot-reload pattern
 ```
 
 ## 📋 ADR Index
@@ -60,6 +64,27 @@ docs/adr/
   - **Component**: User Interface
   - **Decision**: Global stage pattern for TUI component management
   - **Impact**: Unified component management and plugin UI integration
+
+### TUI Timer Feature Decisions (2025-01-09)
+- **[ADR 009](009-file-based-timer-locking.md)** - File-Based Timer Locking Strategy ✅ **APPROVED**
+  - **Component**: Timer System
+  - **Decision**: XDG-compliant file-based locking with process validation
+  - **Impact**: Ensures single timer instance across processes
+
+- **[ADR 010](010-generic-session-architecture.md)** - Generic Session Architecture ✅ **APPROVED**
+  - **Component**: Timer System
+  - **Decision**: String-based session names replacing SessionType enum
+  - **Impact**: Flexible user-defined session naming, breaking change
+
+- **[ADR 011](011-tui-first-command-architecture.md)** - TUI-First Command Architecture ✅ **APPROVED**
+  - **Component**: CLI Interface
+  - **Decision**: pomodux start immediately launches TUI, single process
+  - **Impact**: Simplified architecture, immediate visual feedback
+
+- **[ADR 012](012-configuration-hot-reload.md)** - Configuration Hot-Reload Pattern ✅ **APPROVED**
+  - **Component**: Configuration System
+  - **Decision**: Reload configuration on every timer start
+  - **Impact**: Seamless session customization without restart
 
 ## 🔗 Related Documentation
 
@@ -107,4 +132,4 @@ This index **MUST** be updated when:
 
 **Note**: This directory serves as the authoritative record of architectural decisions. Each ADR provides context for understanding why specific technical choices were made and their implications for the project.
 
-**Last Updated:** 2025-01-27 
+**Last Updated:** 2025-01-09 

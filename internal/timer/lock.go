@@ -14,12 +14,12 @@ import (
 
 // TimerLockManager manages file-based locking to ensure single timer instance
 type TimerLockManager struct {
-	lockFile     string
-	lockFd       *os.File
-	locked       bool
-	timerPID     int
-	sessionName  string
-	mu           sync.Mutex
+	lockFile    string
+	lockFd      *os.File
+	locked      bool
+	timerPID    int
+	sessionName string
+	mu          sync.Mutex
 }
 
 // LockFileState represents the state stored in the lock file
@@ -42,14 +42,14 @@ type TimerConflictError struct {
 func (e *TimerConflictError) Error() string {
 	elapsed := time.Since(e.StartTime)
 	remaining := e.Duration - elapsed
-	
+
 	if remaining <= 0 {
 		return fmt.Sprintf("Timer process %d may have completed. Try: pomodux status", e.PID)
 	}
-	
+
 	return fmt.Sprintf(
-		"Timer already running in process %d (%s remaining in '%s' session)\n" +
-		"Try: pomodux status | pomodux stop | pomodux pause",
+		"Timer already running in process %d (%s remaining in '%s' session)\n"+
+			"Try: pomodux status | pomodux stop | pomodux pause",
 		e.PID,
 		formatDuration(remaining),
 		e.SessionName,
@@ -71,9 +71,9 @@ func NewTimerLockManager() (*TimerLockManager, error) {
 	}
 
 	lockFile := filepath.Join(lockDir, "timer.lock")
-	
+
 	logger.Debug("Lock manager initialized", map[string]interface{}{
-		"lock_file": lockFile,
+		"lock_file":  lockFile,
 		"process_id": os.Getpid(),
 	})
 
@@ -84,6 +84,7 @@ func NewTimerLockManager() (*TimerLockManager, error) {
 }
 
 // AcquireLock attempts to acquire exclusive timer lock
+//
 //nolint:funlen // Complex lock acquisition logic is better kept together
 func (lm *TimerLockManager) AcquireLock(sessionName string, duration time.Duration) error {
 	lm.mu.Lock()
@@ -91,8 +92,8 @@ func (lm *TimerLockManager) AcquireLock(sessionName string, duration time.Durati
 
 	logger.Debug("Attempting to acquire timer lock", map[string]interface{}{
 		"session_name": sessionName,
-		"duration": duration.String(),
-		"lock_file": lm.lockFile,
+		"duration":     duration.String(),
+		"lock_file":    lm.lockFile,
 	})
 
 	// Check if lock file exists and is valid
@@ -108,15 +109,15 @@ func (lm *TimerLockManager) AcquireLock(sessionName string, duration time.Durati
 					})
 					return fmt.Errorf("timer already running (unable to read details)")
 				}
-				
+
 				logger.Warn("Timer already running in another process", map[string]interface{}{
-					"running_pid": state.PID,
-					"running_session": state.SessionName,
+					"running_pid":        state.PID,
+					"running_session":    state.SessionName,
 					"running_start_time": state.StartTime,
-					"attempted_session": sessionName,
+					"attempted_session":  sessionName,
 					"attempted_duration": duration.String(),
 				})
-				
+
 				return &TimerConflictError{
 					PID:         state.PID,
 					SessionName: state.SessionName,
@@ -164,9 +165,9 @@ func (lm *TimerLockManager) AcquireLock(sessionName string, duration time.Durati
 
 	logger.Info("Timer lock acquired successfully", map[string]interface{}{
 		"session_name": sessionName,
-		"duration": duration.String(),
-		"lock_file": lm.lockFile,
-		"process_id": lm.timerPID,
+		"duration":     duration.String(),
+		"lock_file":    lm.lockFile,
+		"process_id":   lm.timerPID,
 	})
 
 	return nil
@@ -183,15 +184,15 @@ func (lm *TimerLockManager) ReleaseLock() error {
 
 	logger.Debug("Releasing timer lock", map[string]interface{}{
 		"session_name": lm.sessionName,
-		"lock_file": lm.lockFile,
-		"process_id": lm.timerPID,
+		"lock_file":    lm.lockFile,
+		"process_id":   lm.timerPID,
 	})
 
 	// Close file descriptor
 	if lm.lockFd != nil {
 		if err := lm.lockFd.Close(); err != nil {
 			logger.Warn("Failed to close lock file descriptor", map[string]interface{}{
-				"error": err.Error(),
+				"error":     err.Error(),
 				"lock_file": lm.lockFile,
 			})
 		}
@@ -210,8 +211,8 @@ func (lm *TimerLockManager) ReleaseLock() error {
 
 	logger.Info("Timer lock released successfully", map[string]interface{}{
 		"session_name": lm.sessionName,
-		"lock_file": lm.lockFile,
-		"process_id": lm.timerPID,
+		"lock_file":    lm.lockFile,
+		"process_id":   lm.timerPID,
 	})
 
 	return nil
@@ -228,7 +229,7 @@ func (lm *TimerLockManager) ReadLockState() (*LockFileState, error) {
 	if err := json.Unmarshal(data, &state); err != nil {
 		logger.Warn("Lock file corrupted, will delete", map[string]interface{}{
 			"lock_file": lm.lockFile,
-			"error": err.Error(),
+			"error":     err.Error(),
 		})
 		// Delete corrupted lock file
 		if removeErr := os.Remove(lm.lockFile); removeErr != nil {
@@ -245,31 +246,31 @@ func (lm *TimerLockManager) ReadLockState() (*LockFileState, error) {
 // validateProcess checks if a process is still running and is a valid pomodux process
 func (lm *TimerLockManager) validateProcess(pid int) bool {
 	logger.Debug("Validating process for lock ownership", map[string]interface{}{
-		"pid": pid,
+		"pid":           pid,
 		"validator_pid": os.Getpid(),
 	})
-	
+
 	// Check if process exists
 	process, err := os.FindProcess(pid)
 	if err != nil {
 		logger.Debug("Process not found during validation", map[string]interface{}{
-			"pid": pid,
+			"pid":   pid,
 			"error": err.Error(),
 		})
 		return false
 	}
-	
+
 	// On Unix systems, check if process is still alive
 	if err := process.Signal(syscall.Signal(0)); err != nil {
 		logger.Debug("Process not responding to signal", map[string]interface{}{
-			"pid": pid,
+			"pid":   pid,
 			"error": err.Error(),
 		})
 		return false
 	}
-	
+
 	logger.Debug("Process validation complete", map[string]interface{}{
-		"pid": pid,
+		"pid":   pid,
 		"valid": true,
 	})
 	return true
@@ -280,7 +281,7 @@ func (lm *TimerLockManager) recoverOrphanedLock() error {
 	logger.Info("Attempting to recover orphaned lock", map[string]interface{}{
 		"lock_file": lm.lockFile,
 	})
-	
+
 	state, err := lm.ReadLockState()
 	if err != nil {
 		logger.Error("Failed to read lock state during recovery", err, map[string]interface{}{
@@ -288,31 +289,31 @@ func (lm *TimerLockManager) recoverOrphanedLock() error {
 		})
 		return err
 	}
-	
+
 	if !lm.validateProcess(state.PID) {
 		logger.Warn("Recovering orphaned timer lock", map[string]interface{}{
 			"orphaned_pid": state.PID,
 			"session_name": state.SessionName,
-			"start_time": state.StartTime,
-			"lock_age": time.Since(state.Locked),
+			"start_time":   state.StartTime,
+			"lock_age":     time.Since(state.Locked),
 		})
-		
+
 		if err := lm.forceReleaseLock(); err != nil {
 			logger.Error("Failed to force release orphaned lock", err, map[string]interface{}{
 				"orphaned_pid": state.PID,
 			})
 			return err
 		}
-		
+
 		logger.Info("Orphaned lock recovered successfully", map[string]interface{}{
 			"orphaned_pid": state.PID,
 			"session_name": state.SessionName,
 		})
 		return nil
 	}
-	
+
 	logger.Debug("Lock owner process is still valid", map[string]interface{}{
-		"owner_pid": state.PID,
+		"owner_pid":    state.PID,
 		"session_name": state.SessionName,
 	})
 	return ErrTimerAlreadyRunning

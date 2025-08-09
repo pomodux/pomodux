@@ -142,10 +142,8 @@ EOF
 cleanup_test_environment() {
     log_test "INFO" "Cleaning up test environment..."
     
-    # Stop any running timer
-    if [ -f "$APP_BINARY" ]; then
-        "$APP_BINARY" stop > /dev/null 2>&1 || true
-    fi
+    # Note: stop command removed from CLI - timers will complete naturally
+    # or can be stopped via TUI if needed
     
     # Restore original config
     if [ -f "${CONFIG_DIR}/config.json.backup" ]; then
@@ -194,8 +192,10 @@ test_basic_functionality() {
     output=$("$APP_BINARY" --help 2>&1)
     assert_exit_code 0 $? "Help command should succeed"
     assert_output_contains "start" "$output" "Help should show start command"
-    assert_output_contains "stop" "$output" "Help should show stop command"
     assert_output_contains "status" "$output" "Help should show status command"
+    assert_output_contains "history" "$output" "Help should show history command"
+    assert_output_contains "config" "$output" "Help should show config command"
+    assert_output_contains "plugin" "$output" "Help should show plugin command"
 }
 
 test_configuration_management() {
@@ -226,9 +226,9 @@ test_configuration_management() {
 test_timer_operations() {
     log_test "INFO" "=== Testing Timer Operations ==="
     
-    # Test start command
+    # Test start command with short duration
     log_test "INFO" "Testing start command..."
-    output=$("$APP_BINARY" start 1m 2>&1)
+    output=$("$APP_BINARY" start 3s 2>&1)
     assert_exit_code 0 $? "Start command should succeed"
     
     # Test status command with running timer
@@ -238,66 +238,47 @@ test_timer_operations() {
     assert_output_contains "running" "$output" "Status should show running timer"
     assert_output_contains "remaining" "$output" "Status should show remaining time"
     
-    # Test pause command
-    log_test "INFO" "Testing pause command..."
-    output=$("$APP_BINARY" pause 2>&1)
-    assert_exit_code 0 $? "Pause command should succeed"
+    # Wait for timer to complete naturally
+    sleep 4
     
-    # Test status command with paused timer
+    # Test status command after timer completion
     output=$("$APP_BINARY" status 2>&1)
-    assert_output_contains "paused" "$output" "Status should show paused timer"
-    
-    # Test resume command
-    log_test "INFO" "Testing resume command..."
-    output=$("$APP_BINARY" resume 2>&1)
-    assert_exit_code 0 $? "Resume command should succeed"
-    
-    # Test status command with resumed timer
-    output=$("$APP_BINARY" status 2>&1)
-    assert_output_contains "running" "$output" "Status should show running timer after resume"
-    
-    # Test stop command
-    log_test "INFO" "Testing stop command..."
-    output=$("$APP_BINARY" stop 2>&1)
-    assert_exit_code 0 $? "Stop command should succeed"
-    
-    # Test status command with stopped timer
-    output=$("$APP_BINARY" status 2>&1)
-    assert_output_contains "idle" "$output" "Status should show idle after stop"
+    assert_output_contains "idle" "$output" "Status should show idle after timer completes"
 }
 
 test_session_types() {
     log_test "INFO" "=== Testing Session Types ==="
     
-    # Test break command
+    # Test break command with short duration
     log_test "INFO" "Testing break command..."
-    output=$("$APP_BINARY" break 2>&1)
+    output=$("$APP_BINARY" break 2s 2>&1)
     assert_exit_code 0 $? "Break command should succeed"
     
     output=$("$APP_BINARY" status 2>&1)
     assert_output_contains "break" "$output" "Status should show break session"
     
-    "$APP_BINARY" stop > /dev/null 2>&1
+    # Wait for break to complete naturally
+    sleep 3
     
-    # Test long-break command
+    # Test long-break command with short duration
     log_test "INFO" "Testing long-break command..."
-    output=$("$APP_BINARY" long-break 2>&1)
+    output=$("$APP_BINARY" long-break 2s 2>&1)
     assert_exit_code 0 $? "Long-break command should succeed"
     
     output=$("$APP_BINARY" status 2>&1)
     assert_output_contains "long break" "$output" "Status should show long break session"
     
-    "$APP_BINARY" stop > /dev/null 2>&1
+    # Wait for long break to complete naturally
+    sleep 3
 }
 
 test_session_history() {
     log_test "INFO" "=== Testing Session History ==="
     
-    # Start and stop a session to create history
+    # Start a session with short duration to create history
     log_test "INFO" "Creating test session for history..."
-    "$APP_BINARY" start 1m > /dev/null 2>&1
-    sleep 2
-    "$APP_BINARY" stop > /dev/null 2>&1
+    "$APP_BINARY" start 2s > /dev/null 2>&1
+    sleep 3  # Wait for completion
     
     # Test history command
     log_test "INFO" "Testing history command..."
@@ -312,23 +293,11 @@ test_session_history() {
 test_error_handling() {
     log_test "INFO" "=== Testing Error Handling ==="
     
-    # Test pause without running timer
-    log_test "INFO" "Testing pause without running timer..."
-    output=$("$APP_BINARY" pause 2>&1)
-    assert_exit_code 1 $? "Pause without running timer should fail"
-    assert_output_contains "error" "$output" "Should show error for invalid pause"
-    
-    # Test resume without paused timer
-    log_test "INFO" "Testing resume without paused timer..."
-    output=$("$APP_BINARY" resume 2>&1)
-    assert_exit_code 1 $? "Resume without paused timer should fail"
-    assert_output_contains "error" "$output" "Should show error for invalid resume"
-    
-    # Test stop without running timer
-    log_test "INFO" "Testing stop without running timer..."
-    output=$("$APP_BINARY" stop 2>&1)
-    assert_exit_code 1 $? "Stop without running timer should fail"
-    assert_output_contains "error" "$output" "Should show error for invalid stop"
+    # Test invalid command
+    log_test "INFO" "Testing invalid command..."
+    output=$("$APP_BINARY" invalid-command 2>&1)
+    assert_exit_code 1 $? "Invalid command should fail"
+    assert_output_contains "error" "$output" "Should show error for invalid command"
     
     # Test start with invalid duration
     log_test "INFO" "Testing start with invalid duration..."
@@ -356,21 +325,22 @@ test_completion_commands() {
 test_force_flag() {
     log_test "INFO" "=== Testing Force Flag ==="
     
-    # Start a timer
-    "$APP_BINARY" start 1m > /dev/null 2>&1
+    # Start a timer with short duration
+    "$APP_BINARY" start 5s > /dev/null 2>&1
     
     # Test start without force (should fail)
     log_test "INFO" "Testing start without force flag..."
-    output=$("$APP_BINARY" start 1m 2>&1)
+    output=$("$APP_BINARY" start 5s 2>&1)
     assert_exit_code 1 $? "Start without force should fail when timer is running"
     assert_output_contains "error" "$output" "Should show error for existing timer"
     
     # Test start with force (should succeed)
     log_test "INFO" "Testing start with force flag..."
-    output=$("$APP_BINARY" start --force 1m 2>&1)
+    output=$("$APP_BINARY" start --force 3s 2>&1)
     assert_exit_code 0 $? "Start with force should succeed"
     
-    "$APP_BINARY" stop > /dev/null 2>&1
+    # Wait for timer to complete naturally
+    sleep 4
 }
 
 # Main test execution

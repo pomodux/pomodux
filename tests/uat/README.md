@@ -52,7 +52,7 @@ The enhanced manual UAT script provides comprehensive testing with automated val
 **Test Categories:**
 - Basic functionality testing
 - Configuration management
-- Timer operations (start, pause, resume, stop)
+- Timer operations (start, status) - pause/resume/stop are now TUI-only
 - Session types (work, break, long break)
 - Session history
 - Error handling
@@ -125,7 +125,7 @@ The automated tests cover:
 
 #### Unit Tests
 - **Basic Functionality**: Version, help, completion commands
-- **Timer Operations**: Start, stop, pause, resume, status
+- **Timer Operations**: Start, status - (pause/resume/stop moved to TUI)
 - **Configuration Management**: Show, set, validation
 - **Session Types**: Work, break, long break sessions
 - **Session History**: Recording, display, persistence
@@ -243,7 +243,7 @@ sudo apt-get install bats  # Ubuntu/Debian
 1. Check if application is built: `make build`
 2. Check configuration: `./pomodux config show`
 3. Check for running timers: `./pomodux status`
-4. Stop any running timers: `./pomodux stop`
+4. Wait for timers to complete or use TUI controls (p/r/q) to pause/resume/stop
 
 #### Permission Issues
 ```bash

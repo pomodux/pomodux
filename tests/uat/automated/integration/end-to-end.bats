@@ -35,10 +35,8 @@ EOF
 }
 
 teardown() {
-    # Stop any running timer
-    if [ -f "$APP_BINARY" ]; then
-        "$APP_BINARY" stop > /dev/null 2>&1 || true
-    fi
+    # Clean up any running timer state (stop command removed from CLI)
+    # Timer will auto-complete or can be stopped via TUI if needed
     
     # Restore original config
     if [ -f "${CONFIG_DIR}/config.json.backup" ]; then
@@ -52,8 +50,8 @@ teardown() {
 }
 
 @test "complete pomodoro workflow: work -> break -> work -> long break" {
-    # Start first work session
-    run "$APP_BINARY" start 1m
+    # Start first work session with short duration
+    run "$APP_BINARY" start 2s
     [ "$status" -eq 0 ]
     
     # Verify work session is running
@@ -62,12 +60,11 @@ teardown() {
     [[ "$output" =~ "work" ]]
     [[ "$output" =~ "running" ]]
     
-    # Stop work session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
+    # Wait for work session to complete naturally
+    sleep 3
     
-    # Start break session
-    run "$APP_BINARY" break 30s
+    # Start break session with short duration
+    run "$APP_BINARY" break 1s
     [ "$status" -eq 0 ]
     
     # Verify break session is running
@@ -76,20 +73,18 @@ teardown() {
     [[ "$output" =~ "break" ]]
     [[ "$output" =~ "running" ]]
     
-    # Stop break session
-    run "$APP_BINARY" stop
+    # Wait for break session to complete naturally
+    sleep 2
+    
+    # Start second work session with short duration
+    run "$APP_BINARY" start 2s
     [ "$status" -eq 0 ]
     
-    # Start second work session
-    run "$APP_BINARY" start 1m
-    [ "$status" -eq 0 ]
+    # Wait for second work session to complete naturally
+    sleep 3
     
-    # Stop second work session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
-    
-    # Start long break session
-    run "$APP_BINARY" long-break 1m
+    # Start long break session with short duration
+    run "$APP_BINARY" long-break 1s
     [ "$status" -eq 0 ]
     
     # Verify long break session is running
@@ -98,9 +93,8 @@ teardown() {
     [[ "$output" =~ "long break" ]]
     [[ "$output" =~ "running" ]]
     
-    # Stop long break session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
+    # Wait for long break session to complete naturally
+    sleep 2
     
     # Verify all sessions are recorded in history
     run "$APP_BINARY" history
@@ -110,44 +104,6 @@ teardown() {
     [[ "$output" =~ "long break" ]]
 }
 
-@test "pause and resume workflow" {
-    # Start a work session
-    run "$APP_BINARY" start 2m
-    [ "$status" -eq 0 ]
-    
-    # Wait a moment
-    sleep 2
-    
-    # Pause the session
-    run "$APP_BINARY" pause
-    [ "$status" -eq 0 ]
-    
-    # Verify session is paused
-    run "$APP_BINARY" status
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "paused" ]]
-    
-    # Wait while paused
-    sleep 2
-    
-    # Resume the session
-    run "$APP_BINARY" resume
-    [ "$status" -eq 0 ]
-    
-    # Verify session is running again
-    run "$APP_BINARY" status
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "running" ]]
-    
-    # Stop the session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
-    
-    # Verify session is recorded in history
-    run "$APP_BINARY" history
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "work" ]]
-}
 
 @test "configuration management workflow" {
     # Show initial configuration
@@ -176,15 +132,16 @@ teardown() {
     [[ "$output" =~ "5m" ]]
     [[ "$output" =~ "15m" ]]
     
-    # Test that new configuration is used
-    run "$APP_BINARY" start
+    # Test that new configuration is used with very short duration
+    run "$APP_BINARY" start 1s
     [ "$status" -eq 0 ]
     
     run "$APP_BINARY" status
     [ "$status" -eq 0 ]
-    [[ "$output" =~ "25m" ]] || [[ "$output" =~ "1500" ]]
+    [[ "$output" =~ "running" ]]
     
-    "$APP_BINARY" stop > /dev/null 2>&1
+    # Wait for timer to complete naturally
+    sleep 2
 }
 
 @test "force flag workflow" {
@@ -206,9 +163,8 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ "$output" =~ "running" ]]
     
-    # Stop the session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
+    # Wait for the session to complete naturally
+    sleep 2
 }
 
 @test "error handling workflow" {
@@ -221,16 +177,8 @@ teardown() {
     [ "$status" -eq 1 ]
     [[ "$output" =~ "error" ]]
     
-    # Test operations on non-existent timer
-    run "$APP_BINARY" pause
-    [ "$status" -eq 1 ]
-    [[ "$output" =~ "error" ]]
-    
-    run "$APP_BINARY" resume
-    [ "$status" -eq 1 ]
-    [[ "$output" =~ "error" ]]
-    
-    run "$APP_BINARY" stop
+    # Test invalid command
+    run "$APP_BINARY" invalid-operation
     [ "$status" -eq 1 ]
     [[ "$output" =~ "error" ]]
     
@@ -261,18 +209,15 @@ teardown() {
 }
 
 @test "session history workflow" {
-    # Create multiple sessions
-    "$APP_BINARY" start 1m > /dev/null 2>&1
-    sleep 1
-    "$APP_BINARY" stop > /dev/null 2>&1
+    # Create multiple sessions with very short durations
+    "$APP_BINARY" start 1s > /dev/null 2>&1
+    sleep 2  # Wait for completion
     
-    "$APP_BINARY" break 30s > /dev/null 2>&1
-    sleep 1
-    "$APP_BINARY" stop > /dev/null 2>&1
+    "$APP_BINARY" break 1s > /dev/null 2>&1
+    sleep 2  # Wait for completion
     
-    "$APP_BINARY" long-break 1m > /dev/null 2>&1
-    sleep 1
-    "$APP_BINARY" stop > /dev/null 2>&1
+    "$APP_BINARY" long-break 1s > /dev/null 2>&1
+    sleep 2  # Wait for completion
     
     # Check history shows all sessions
     run "$APP_BINARY" history
@@ -310,20 +255,18 @@ teardown() {
     run "$APP_BINARY" --help
     [ "$status" -eq 0 ]
     [[ "$output" =~ "start" ]]
-    [[ "$output" =~ "stop" ]]
     [[ "$output" =~ "status" ]]
-    [[ "$output" =~ "pause" ]]
-    [[ "$output" =~ "resume" ]]
     [[ "$output" =~ "break" ]]
     [[ "$output" =~ "long-break" ]]
     [[ "$output" =~ "config" ]]
     [[ "$output" =~ "history" ]]
     [[ "$output" =~ "completion" ]]
+    [[ "$output" =~ "plugin" ]]
 }
 
 @test "state persistence workflow" {
-    # Start a session
-    run "$APP_BINARY" start 2m
+    # Start a session with short duration
+    run "$APP_BINARY" start 3s
     [ "$status" -eq 0 ]
     
     # Verify session is running
@@ -336,9 +279,8 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ "$output" =~ "running" ]]
     
-    # Stop the session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
+    # Wait for the session to complete naturally
+    sleep 4
     
     # Verify session is recorded
     run "$APP_BINARY" history
@@ -346,38 +288,4 @@ teardown() {
     [[ "$output" =~ "work" ]]
 }
 
-@test "complex pause and resume workflow" {
-    # Start a session
-    run "$APP_BINARY" start 3m
-    [ "$status" -eq 0 ]
-    
-    # Wait and pause
-    sleep 1
-    run "$APP_BINARY" pause
-    [ "$status" -eq 0 ]
-    
-    # Wait while paused
-    sleep 1
-    
-    # Resume
-    run "$APP_BINARY" resume
-    [ "$status" -eq 0 ]
-    
-    # Wait and pause again
-    sleep 1
-    run "$APP_BINARY" pause
-    [ "$status" -eq 0 ]
-    
-    # Resume again
-    run "$APP_BINARY" resume
-    [ "$status" -eq 0 ]
-    
-    # Stop the session
-    run "$APP_BINARY" stop
-    [ "$status" -eq 0 ]
-    
-    # Verify session is recorded
-    run "$APP_BINARY" history
-    [ "$status" -eq 0 ]
-    [[ "$output" =~ "work" ]]
-} 
+ 

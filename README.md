@@ -8,7 +8,7 @@ A powerful terminal-based timer and Pomodoro application built in Go, designed f
 - **Persistent Timer Sessions**: Interactive keypress controls (p, r, q, s, Ctrl+C)
 - **Real-time Progress Display**: Visual progress bars and time remaining
 - **Pomodoro Technique**: Dedicated work/break commands
-- **Enhanced CLI Interface**: Start, pause, resume, stop, and status commands
+- **Enhanced CLI Interface**: Start, status, history, config, and plugin commands with TUI controls
 - **State Persistence**: Timer state survives process restarts
 - **Configuration System**: XDG-compliant configuration management
 - **Session History**: Track and display session statistics
@@ -53,8 +53,7 @@ pomodux start 25m
 # Check timer status
 pomodux status
 
-# Stop the timer
-pomodux stop
+# Use TUI controls for timer management (p=pause, r=resume, q=stop)
 ```
 
 ### Supported Duration Formats
