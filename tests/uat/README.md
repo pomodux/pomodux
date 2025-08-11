@@ -1,13 +1,10 @@
 # Pomodux UAT Test Suite
 
-This directory contains comprehensive User Acceptance Testing (UAT) scripts and automated tests for the Pomodux application, implementing the testing strategy defined in [ADR 003: UAT Testing Approach](docs/adr/003-uat-testing-approach.md).
+This directory contains User Acceptance Testing (UAT) scripts for the Pomodux application, implementing the testing strategy defined in [ADR 003: UAT Testing Approach](docs/adr/003-uat-testing-approach.md).
 
 ## Overview
 
-The UAT test suite provides two complementary testing approaches:
-
-1. **Manual UAT Scripts** - For user experience validation and manual testing
-2. **Automated BATS Tests** - For regression testing and CI/CD integration
+The UAT test suite provides manual testing approaches for user experience validation and acceptance testing of the single-process TUI application.
 
 ## Directory Structure
 
@@ -15,20 +12,16 @@ The UAT test suite provides two complementary testing approaches:
 tests/uat/
 ├── manual/
 │   └── uat-script.sh              # Enhanced manual UAT script
-├── automated/
-│   ├── bats/
-│   │   ├── basic-functionality.bats
-│   │   ├── timer-operations.bats
-│   │   ├── configuration.bats
-│   │   ├── session-types.bats
-│   │   └── session-history.bats
-│   ├── integration/
-│   │   └── end-to-end.bats
-│   └── run-tests.sh               # Test runner script
-├── fixtures/
-│   └── configs/                   # Test configuration files
-└── reports/                       # Test reports and results
+└── fixtures/
+    └── configs/                   # Test configuration files
 ```
+
+## Testing Strategy
+
+Since Pomodux has been refactored to a single-process TUI-only application, the testing approach focuses on:
+
+1. **Go Unit Tests** - Comprehensive automated testing (`make test`)
+2. **Manual UAT Scripts** - User experience validation and acceptance testing
 
 ## Manual UAT Testing
 
@@ -50,122 +43,40 @@ The enhanced manual UAT script provides comprehensive testing with automated val
 - ✅ Integration with release management process
 
 **Test Categories:**
-- Basic functionality testing
+- Basic functionality testing (help, version)
 - Configuration management
-- Timer operations (start, status) - pause/resume/stop are now TUI-only
+- TUI timer operations (start, pause, resume, stop via keyboard)
 - Session types (work, break, long break)
-- Session history
-- Error handling
-- Completion commands
-- Force flag functionality
+- Session history and recording
+- Error handling and edge cases
+- Single timer enforcement (file-based locking)
 
-### Simple UAT Script
+## Go Unit Testing
 
-For basic manual testing with clear explanations:
-
-```bash
-# Use the simple UAT script from docs/uat-script.md
-# Copy the bash section and run it manually
-```
-
-## Automated Testing with BATS
-
-### Prerequisites
-
-Install BATS (Bash Automated Testing System):
+The primary automated testing is handled by the Go test suite:
 
 ```bash
-# On macOS with Homebrew
-brew install bats-core
+# Run all unit tests
+make test
 
-# On Ubuntu/Debian
-sudo apt-get install bats
-
-# On Arch Linux
-sudo pacman -S bats
-
-# Or install from source
-git clone https://github.com/bats-core/bats-core.git
-cd bats-core
-sudo ./install.sh /usr/local
+# Run tests with coverage
+make test-coverage
 ```
 
-### Running Automated Tests
-
-#### Run All Tests
-```bash
-# Run all automated tests with reporting
-./tests/uat/automated/run-tests.sh
-```
-
-#### Run Individual Test Suites
-```bash
-# Basic functionality tests
-bats tests/uat/automated/bats/basic-functionality.bats
-
-# Timer operations tests
-bats tests/uat/automated/bats/timer-operations.bats
-
-# Configuration management tests
-bats tests/uat/automated/bats/configuration.bats
-
-# Session types tests
-bats tests/uat/automated/bats/session-types.bats
-
-# Session history tests
-bats tests/uat/automated/bats/session-history.bats
-
-# Integration tests
-bats tests/uat/automated/integration/end-to-end.bats
-```
-
-### Test Coverage
-
-The automated tests cover:
-
-#### Unit Tests
-- **Basic Functionality**: Version, help, completion commands
-- **Timer Operations**: Start, status - (pause/resume/stop moved to TUI)
-- **Configuration Management**: Show, set, validation
-- **Session Types**: Work, break, long break sessions
-- **Session History**: Recording, display, persistence
-
-#### Integration Tests
-- **End-to-End Workflows**: Complete user scenarios
-- **Real-time Timer Completion**: Auto-completion behavior
-- **State Persistence**: Cross-process state management
-- **Error Handling**: Edge cases and error conditions
-
-## Test Reports
-
-### Automated Test Reports
-
-Test reports are generated in the `tests/reports/` directory:
-
-- **TAP Format**: Individual test suite results
-- **Summary Report**: Comprehensive test summary with metrics
-- **Timestamped**: Each run creates timestamped reports
-
-### Report Structure
-
-```
-tests/reports/
-├── test-summary-20250127_143022.md    # Summary report
-├── basic-functionality-20250127_143022.tap
-├── timer-operations-20250127_143022.tap
-├── configuration-20250127_143022.tap
-├── session-types-20250127_143022.tap
-├── session-history-20250127_143022.tap
-└── end-to-end-20250127_143022.tap
-```
+**Test Coverage:**
+- **Config Tests**: Configuration loading, validation, and management
+- **Logger Tests**: Logging functionality and levels
+- **Plugin Tests**: Plugin system, loading, and event emission
+- **Timer Tests**: Core timer functionality, state management, and locking
+- **Lock Tests**: File-based single timer enforcement
 
 ## Test Configuration
 
 ### Test Environment Setup
 
 All tests automatically:
-- Build the application
-- Set up test configuration
+- Build the application (`make build`)
+- Set up test configuration files
 - Backup existing configuration
 - Clean up after completion
 
@@ -175,9 +86,12 @@ Test configurations use short durations for quick execution:
 
 ```json
 {
-    "default_work_duration": "1m",
-    "default_break_duration": "30s",
-    "default_long_break_duration": "2m"
+    "timer": {
+        "default_work_duration": "1m",
+        "default_break_duration": "30s",
+        "default_long_break_duration": "2m",
+        "default_session_name": "work"
+    }
 }
 ```
 
@@ -187,6 +101,7 @@ Each test runs in isolation:
 - Configuration is backed up and restored
 - Session history is cleaned between tests
 - No interference between test runs
+- Single timer enforcement prevents conflicts
 
 ## Integration with Release Process
 
@@ -194,14 +109,14 @@ Each test runs in isolation:
 
 The UAT test suite integrates with the 4-gate approval process:
 
-1. **Manual UAT**: Required for Gate 3 approval
-2. **Automated Tests**: Run as part of CI/CD pipeline
+1. **Unit Tests**: Automated Go tests run on every build
+2. **Manual UAT**: Required for Gate 3 approval
 3. **Test Results**: Documented in release documentation
 4. **Issue Tracking**: Test failures tracked as GitHub issues
 
 ### Release Testing Workflow
 
-1. **Development Phase**: Automated tests run on every commit
+1. **Development Phase**: Unit tests run on every commit (`make test`)
 2. **UAT Phase**: Manual UAT scripts executed by stakeholders
 3. **Release Phase**: Both test suites run for final validation
 4. **Post-Release**: Automated tests run for regression protection
@@ -211,7 +126,7 @@ The UAT test suite integrates with the 4-gate approval process:
 ### Test Coverage Requirements
 
 - **Feature Coverage**: 100% of user-facing features
-- **Command Coverage**: 100% of CLI commands
+- **TUI Functionality**: All keyboard controls and interactions
 - **Error Scenario Coverage**: All documented error conditions
 - **Workflow Coverage**: All documented user workflows
 
@@ -232,24 +147,22 @@ The UAT test suite integrates with the 4-gate approval process:
 
 ### Common Issues
 
-#### BATS Not Found
+#### Build Failures
 ```bash
-# Install BATS
-brew install bats-core  # macOS
-sudo apt-get install bats  # Ubuntu/Debian
+# Ensure application builds successfully
+make build
 ```
 
 #### Test Failures
 1. Check if application is built: `make build`
-2. Check configuration: `./pomodux config show`
-3. Check for running timers: `./pomodux status`
-4. Wait for timers to complete or use TUI controls (p/r/q) to pause/resume/stop
+2. Check configuration: `./bin/pomodux --help`
+3. Check for running timers: Look for lock files in XDG runtime directory
+4. Use TUI controls (P/R/S/Q) to pause/resume/stop/quit timers
 
 #### Permission Issues
 ```bash
 # Make scripts executable
 chmod +x tests/uat/manual/uat-script.sh
-chmod +x tests/uat/automated/run-tests.sh
 ```
 
 ### Debug Mode
@@ -260,9 +173,39 @@ Run tests with verbose output:
 # Manual UAT with debug output
 ./tests/uat/manual/uat-script.sh 2>&1 | tee uat-debug.log
 
-# BATS with verbose output
-bats --verbose tests/uat/automated/bats/basic-functionality.bats
+# Go tests with verbose output
+go test -v ./...
 ```
+
+## Single-Process TUI Architecture
+
+The Pomodux application now uses a single-process TUI-first architecture:
+
+- **TUI-Only Interface**: `pomodux start` immediately launches interactive TUI
+- **Event-Driven**: Timer uses event notifications instead of polling
+- **Single Timer Enforcement**: File-based locking prevents multiple instances
+- **No CLI Commands**: All timer control happens within TUI interface
+- **Backwards Compatibility**: `pomodux start 25m "work"` syntax still supported
+
+## Testing the TUI
+
+### Manual TUI Testing
+
+Test the interactive TUI interface:
+
+1. **Start Timer**: `./bin/pomodux 1m test`
+2. **Keyboard Controls**: Test P(ause), R(esume), S(top), Q(uit)
+3. **Progress Display**: Verify real-time progress updates
+4. **Session Completion**: Let timer complete naturally
+5. **Multiple Instance**: Try starting second timer (should fail)
+
+### TUI Test Scenarios
+
+- **Normal Completion**: Start timer and let it complete
+- **User Interruption**: Start timer and stop with 'S' or 'Q'
+- **Pause/Resume**: Test pause with 'P' and resume with 'R'
+- **Lock Enforcement**: Try starting multiple timers simultaneously
+- **Error Handling**: Test invalid durations, missing arguments
 
 ## Future Enhancements
 
@@ -272,20 +215,20 @@ bats --verbose tests/uat/automated/bats/basic-functionality.bats
 2. **Performance Testing**: Automated performance benchmarking
 3. **Cross-Platform Testing**: Multi-platform test execution
 4. **Continuous Integration**: GitHub Actions integration
-5. **Test Parallelization**: Parallel execution of independent tests
+5. **TUI Automation**: Automated TUI interaction testing
 
 ### Advanced Features
 
-- **Test Distribution**: Distributed testing across multiple environments
-- **Accessibility Testing**: Automated accessibility validation
-- **Security Testing**: Automated security vulnerability scanning
+- **Accessibility Testing**: TUI accessibility validation
+- **Security Testing**: File permission and lock security
+- **Load Testing**: Multiple process coordination testing
 - **Advanced Reporting**: Enhanced test analytics and metrics
 
 ## 🔗 Related Documentation
 
 - **[Release Management](docs/release-management.md)** - Release process and approval gates
 - **[Requirements](../../docs/requirements.md)** - Project requirements and specifications
-- **[Releases](~/Documents/pomodux/releases/)** - Historical release documentation (external)
+- **[ADR 011](docs/adr/011-tui-first-command-architecture.md)** - TUI-first architecture decision
 
 ## Contributing
 
@@ -295,13 +238,13 @@ When adding new tests:
 2. **Maintain Isolation**: Ensure tests don't interfere with each other
 3. **Add Documentation**: Document test purpose and expected behavior
 4. **Update Coverage**: Ensure new features are covered by tests
-5. **Run All Tests**: Verify no regressions in existing tests
+5. **Run All Tests**: Verify no regressions (`make test`)
 
 ## Support
 
 For issues with the test suite:
 
 1. Check the troubleshooting section above
-2. Review the test reports for specific failure details
+2. Review the Go test output for specific failure details
 3. Check the [ADR 003](docs/adr/003-uat-testing-approach.md) for testing strategy
-4. Create a GitHub issue with detailed error information 
+4. Create a GitHub issue with detailed error information

@@ -191,8 +191,8 @@ The CI workflow runs on:
 **Purpose**: Run User Acceptance Tests
 
 **Features**:
-- Installs bats-core testing framework
-- Runs automated UAT tests
+- Runs Go unit tests with coverage
+- Executes manual UAT validation scripts  
 - Uploads test results as artifacts
 
 ## 4.0 Release Workflow Details

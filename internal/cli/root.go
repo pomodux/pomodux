@@ -2,11 +2,15 @@ package cli
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/pomodux/pomodux/internal/config"
 )
 
 var (
 	// Used for flags.
 	cfgFile string
+	
+	// Global config instance
+	globalConfig *config.Config
 
 	rootCmd = &cobra.Command{
 		Use:   "pomodux",
