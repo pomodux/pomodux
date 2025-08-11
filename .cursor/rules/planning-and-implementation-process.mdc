@@ -1,0 +1,27 @@
+---
+description: Implementation process and planning guidelines
+---
+# Implementation Process
+
+## Structured Implementation Approach
+Follow the structured implementation pattern defined in [.claude/commands/plan-and-implement.md](mdc:.claude/commands/plan-and-implement.md)
+
+This pattern includes:
+1. **Requirements Clarification** - Understanding business needs
+2. **Technical Analysis** - ADR review and codebase audit  
+3. **Checklist Creation** - Breaking down tasks
+4. **Implementation Planning** - Detailed execution plan
+5. **Implementation Execution** - With approval gates
+6. **Documentation Audit** - Final verification
+
+## Key Integration Points
+- Always review relevant ADRs during Technical Analysis phase
+- Reference [docs/adr/](mdc:docs/adr/) for architectural decisions
+- Follow established patterns in [docs/go-standards.md](mdc:docs/go-standards.md)
+- **Important** Use approval gates to ensure alignment
+
+## Process Benefits
+- Ensures ADR compliance through structured analysis
+- Provides clear approval gates
+- Maintains documentation alignment
+- Reduces implementation risks through planning

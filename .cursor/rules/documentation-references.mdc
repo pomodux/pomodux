@@ -1,0 +1,23 @@
+---
+alwaysApply: true
+---
+# Documentation References
+
+## Architecture Decision Records (ADRs)
+
+Always audit and understand  key architectural decisions found in the [ADR folder](mdc:docs/adr/*)
+
+## Standards and Guidelines
+Implementation standards are documented in:
+- [docs/go-standards.md](mdc:docs/go-standards.md) - Go coding standards
+- [docs/documentation-standards.md](mdc:docs/documentation-standards.md) - Documentation guidelines
+- [docs/logging-standards.md](mdc:docs/logging-standards.md) - Logging standards
+
+## Development Setup
+Development guidelines are in:
+- [docs/development-setup.md](mdc:docs/development-setup.md) - Development environment setup
+- [docs/ci-cd-pipeline.md](mdc:docs/ci-cd-pipeline.md) - CI/CD process
+
+## Configuration
+Configuration details are in:
+- [docs/configuration_file_specifications.md](mdc:docs/configuration_file_specifications.md) - Configuration format

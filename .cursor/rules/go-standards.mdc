@@ -1,0 +1,67 @@
+---
+globs: *.go
+---
+# Go Code Standards for Pomodux
+
+## Build Standards
+Always use the Makefile for building:
+- Use `make build` instead of `go build` directly
+- Executables must go in `bin/` directory
+- Reference: [docs/go-standards.md](mdc:docs/go-standards.md)
+
+## Timer Implementation
+1. Event-Driven Design
+   - Use channels for event propagation
+   - No polling mechanisms
+   - Direct state updates
+
+2. State Management
+   - Use RWMutex for state access
+   - Atomic state transitions
+   - Event emission for state changes
+
+3. Error Handling
+   - Return errors, don't panic
+   - Clear error messages
+   - Handle file operation errors gracefully
+
+4. Testing
+   - Use testify for assertions
+   - Test event propagation
+   - Test state transitions
+   - Test file locking
+
+## TUI Implementation
+1. Bubbletea Model
+   - Single process model
+   - Event-based updates
+   - No background polling
+
+2. State Updates
+   - React to timer events
+   - Update display immediately
+   - Handle window resizing
+
+3. Testing
+   - Use teatest framework
+   - Test user interactions
+   - Test display updates
+
+## File Organization
+1. Package Structure
+   - timer: Core timer functionality
+   - tui: User interface
+   - cli: Command-line interface
+
+2. File Naming
+   - _test.go for test files
+   - Clear, descriptive names
+   - Separate concerns into files
+
+3. Documentation
+   - Document public APIs
+   - Include examples
+   - Explain complex logic
+
+## Standards Reference
+For detailed Go standards see: [docs/go-standards.md](mdc:docs/go-standards.md)

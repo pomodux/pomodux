@@ -1,0 +1,40 @@
+---
+alwaysApply: true
+---
+# Pomodux Architecture Guidelines
+
+## Core Architecture Principles
+1. Single-Process TUI Architecture
+   - Timer and TUI must run in the same process
+   - No cross-process synchronization
+   - All timer operations happen within TUI
+   - File-based locking for system-wide single timer enforcement
+
+2. Command Structure
+   - `pomodux start` is the primary entry point
+   - Launches TUI immediately (blocking)
+   - No separate CLI timer control commands
+   - Status command for external state checks
+
+3. State Management
+   - Timer state managed within TUI process
+   - File-based locking using XDG-compliant paths
+   - Event-driven updates for sub-second accuracy
+   - No background processes or polling
+
+4. File Organization
+   - Timer core: [internal/timer/timer.go](mdc:internal/timer/timer.go)
+   - TUI implementation: [internal/tui/tui.go](mdc:internal/tui/tui.go)
+   - CLI commands: [internal/cli/](mdc:internal/cli/)
+   - Main entry: [cmd/pomodux/main.go](mdc:cmd/pomodux/main.go)
+
+## Implementation Rules
+1. No cross-process synchronization
+2. No background goroutines except for timer ticks
+3. Event-driven state updates
+4. Single source of truth for timer state
+5. XDG-compliant file paths for locks and state
+
+## Architectural Decision Records
+
+Key architectural decisions are documented in the [ADR folder](mdc:docs/adr/*)

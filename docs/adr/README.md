@@ -34,10 +34,10 @@ docs/adr/
   - **Decision**: File-based persistence with JSON state storage
   - **Impact**: Enables timer state recovery across application restarts
 
-- **[ADR 003](003-uat-testing-approach.md)** - UAT Testing Approach ✅ **APPROVED**
+- **[ADR 003](003-uat-testing-approach.md)** - TUI Testing Approach ✅ **APPROVED**
   - **Component**: Quality Assurance
-  - **Decision**: Automated UAT with shell scripts and BATS framework
-  - **Impact**: Ensures user-facing functionality works as expected
+  - **Decision**: Automated TUI testing with teatest framework
+  - **Impact**: Ensures TUI functionality works as expected with Bubbletea
 
 ### System Architecture Decisions
 - **[ADR 004](004-plugin-system-architecture.md)** - Plugin System Architecture ✅ **APPROVED**

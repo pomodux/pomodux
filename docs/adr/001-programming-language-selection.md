@@ -155,8 +155,9 @@ Given the updated priority order where CLI capabilities are the highest priority
 ### 6.1 Core Dependencies
 - **CLI Framework**: `cobra` (https://github.com/spf13/cobra) - Industry standard CLI library
 - **Alternative CLI**: `urfave/cli` (https://github.com/urfave/cli) - Popular CLI framework
-- **TUI Framework**: `bubbletea` (https://github.com/charmbracelet/bubbletea) - Modern TUI framework
-- **Alternative TUI**: `termui` (https://github.com/gizak/termui) - Feature-rich TUI library
+- **TUI Framework**: `bubbletea` (https://github.com/charmbracelet/bubbletea) - Exclusive TUI framework
+- **TUI Styling**: `lipgloss` (https://github.com/charmbracelet/lipgloss) - Styling for Bubbletea
+- **TUI Testing**: `teatest` (https://github.com/charmbracelet/x/exp/teatest) - Testing for Bubbletea
 - **Lua Integration**: `gopher-lua` (https://github.com/yuin/gopher-lua) - Pure Go Lua VM
 - **Configuration**: `viper` (https://github.com/spf13/viper) - Configuration solution
 - **Notifications**: `go-notify` (https://github.com/mqu/go-notify) for desktop notifications

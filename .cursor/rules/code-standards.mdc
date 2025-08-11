@@ -1,0 +1,36 @@
+---
+globs: *.go
+---
+# Code Standards
+
+## Follow Established Standards
+1. Go Standards
+   - Follow [docs/go-standards.md](mdc:docs/go-standards.md)
+   - Use standard Go project layout
+   - Follow Go best practices
+
+2. Documentation
+   - Follow [docs/documentation-standards.md](mdc:docs/documentation-standards.md)
+   - Document public APIs
+   - Include examples
+
+3. Logging
+   - Follow [docs/logging-standards.md](mdc:docs/logging-standards.md)
+   - Use structured logging
+   - Include context
+
+## Testing Requirements
+1. Unit Tests
+   - Test individual components
+   - Use table-driven tests
+   - Mock dependencies
+
+2. Integration Tests
+   - Test component interactions
+   - Use teatest for TUI testing
+   - Test file operations
+
+3. Test Coverage
+   - Core timer functionality
+   - TUI interactions
+   - Lock management

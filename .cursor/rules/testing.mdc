@@ -1,0 +1,73 @@
+---
+globs: *_test.go
+---
+# Testing Standards for Pomodux
+
+## Testing Framework Strategy
+Use teatest-only approach as defined in [docs/adr/003-uat-testing-approach.md](mdc:docs/adr/003-uat-testing-approach.md):
+- **TUI Tests**: teatest framework for all Bubbletea component testing
+- **Unit Tests**: Standard Go testing for non-TUI components
+
+## Test Organization
+1. Unit Tests
+   - Test individual components
+   - Use table-driven tests
+   - Mock dependencies appropriately
+   - Clear test names and descriptions
+
+2. Integration Tests
+   - Test component interactions
+   - Test file operations
+   - Test event propagation
+   - Test state persistence
+
+3. TUI Tests
+   - Use teatest framework
+   - Test user interactions
+   - Test display updates
+   - Test window resizing
+
+4. TUI Integration Tests
+   - Located in `internal/tui/`
+   - teatest-based TUI component testing
+   - Golden file testing for consistent output
+
+## Test Structure
+1. Setup
+   - Clear test setup
+   - Proper cleanup
+   - Isolated test state
+   - Meaningful test data
+
+2. Assertions
+   - Use testify/assert for Go unit tests
+   - Use teatest.WaitFor for TUI state assertions
+   - Clear failure messages
+   - Test edge cases and error conditions
+
+3. Mocking
+   - Mock file operations
+   - Mock time.Now() when needed
+   - Mock external dependencies
+
+## Test Coverage
+1. Timer Core
+   - State transitions
+   - Event emission
+   - Error handling
+   - Lock management
+
+2. TUI
+   - User input handling
+   - Display updates
+   - Window resizing
+   - Error states
+
+3. CLI
+   - Command parsing
+   - Error handling
+   - Status reporting
+
+## Testing References
+- [docs/adr/003-uat-testing-approach.md](mdc:docs/adr/003-uat-testing-approach.md) - TUI testing strategy with teatest
+- [docs/go-standards.md](mdc:docs/go-standards.md) - Go testing standards and TDD examples
