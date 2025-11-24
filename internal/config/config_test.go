@@ -15,7 +15,7 @@ func TestDefaultConfig(t *testing.T) {
 	assert.Equal(t, "1.0", config.Version)
 	assert.Equal(t, "25m", config.Timers["work"])
 	assert.Equal(t, "5m", config.Timers["break"])
-	assert.Equal(t, "15m", config.Timers["longbreak"])
+	assert.Equal(t, "15m", config.Timers["long_break"])
 	assert.Equal(t, "default", config.Theme)
 	assert.False(t, config.Timer.BellOnComplete)
 	assert.Equal(t, "info", config.Logging.Level)
@@ -101,4 +101,3 @@ func TestTimerStatePath(t *testing.T) {
 	path := TimerStatePath()
 	assert.Contains(t, path, "timer_state.json")
 }
-

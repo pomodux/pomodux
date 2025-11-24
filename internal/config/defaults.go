@@ -5,9 +5,9 @@ func DefaultConfig() *Config {
 	return &Config{
 		Version: "1.0",
 		Timers: map[string]string{
-			"work":      "25m",
-			"break":     "5m",
-			"longbreak": "15m",
+			"work":       "25m",
+			"break":      "5m",
+			"long_break": "15m",
 		},
 		Theme: "default",
 		Timer: TimerConfig{
@@ -18,9 +18,8 @@ func DefaultConfig() *Config {
 			File:  "",
 		},
 		Plugins: PluginsConfig{
-			Enabled:  []string{},
+			Enabled:   []string{},
 			Directory: "",
 		},
 	}
 }
-

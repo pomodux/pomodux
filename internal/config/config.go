@@ -32,8 +32,8 @@ type LoggingConfig struct {
 
 // PluginsConfig represents plugin configuration (Post-MVP)
 type PluginsConfig struct {
-	Enabled  []string `yaml:"enabled"`
-	Directory string  `yaml:"directory"`
+	Enabled   []string `yaml:"enabled"`
+	Directory string   `yaml:"directory"`
 }
 
 // Load loads configuration from the XDG-compliant config file location
@@ -48,8 +48,20 @@ func LoadFromPath(path string) (*Config, error) {
 
 	// Check if file exists
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		logger.WithError(err).Info("Config file not found, using defaults")
-		return DefaultConfig(), nil
+		logger.Info("Config file not found, creating default configuration")
+		logger.WithField("config_path", path).Debug("Config will be saved to path")
+
+		defaults := DefaultConfig()
+
+		// Try to save default config to disk
+		if err := SaveToPath(defaults, path); err != nil {
+			logger.WithError(err).Warn("Could not create config file, using in-memory defaults")
+			// Don't fail - return defaults even if we couldn't save
+			return defaults, nil
+		}
+
+		logger.Info("Default config file created successfully")
+		return defaults, nil
 	}
 
 	// Read file
@@ -88,11 +100,15 @@ func SaveToPath(config *Config, path string) error {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	// Marshal to YAML
+	// Marshal to YAML with proper indentation
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
+
+	// Add a helpful comment at the top
+	header := "# Pomodux Configuration File\n# Edit this file to customize your timer settings\n\n"
+	data = append([]byte(header), data...)
 
 	// Write file with proper permissions
 	if err := os.WriteFile(path, data, 0600); err != nil {
@@ -160,31 +176,33 @@ func validateAndApplyDefaults(config *Config) error {
 
 // applyDefaults applies default values to missing config fields
 func applyDefaults(config *Config) {
+	defaults := DefaultConfig()
+
 	if config.Version == "" {
-		config.Version = "1.0"
+		config.Version = defaults.Version
 	}
 
-	if config.Timers == nil {
-		config.Timers = make(map[string]string)
-	}
-
-	// Apply default timers if none exist
-	if len(config.Timers) == 0 {
-		config.Timers["work"] = "25m"
-		config.Timers["break"] = "5m"
-		config.Timers["longbreak"] = "15m"
+	if config.Timers == nil || len(config.Timers) == 0 {
+		config.Timers = defaults.Timers
 	}
 
 	if config.Theme == "" {
-		config.Theme = "default"
+		config.Theme = defaults.Theme
 	}
 
 	if config.Logging.Level == "" {
-		config.Logging.Level = "info"
+		config.Logging.Level = defaults.Logging.Level
+	}
+
+	if config.Logging.File == "" {
+		config.Logging.File = defaults.Logging.File
 	}
 
 	if config.Plugins.Enabled == nil {
-		config.Plugins.Enabled = []string{}
+		config.Plugins.Enabled = defaults.Plugins.Enabled
+	}
+
+	if config.Plugins.Directory == "" {
+		config.Plugins.Directory = defaults.Plugins.Directory
 	}
 }
-
