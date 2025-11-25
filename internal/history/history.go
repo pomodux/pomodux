@@ -110,3 +110,4 @@ func (h *History) GetRecent(limit int) []Session {
 	return result
 }
 
+

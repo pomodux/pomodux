@@ -101,3 +101,4 @@ func TestTimerStatePath(t *testing.T) {
 	path := TimerStatePath()
 	assert.Contains(t, path, "timer_state.json")
 }
+

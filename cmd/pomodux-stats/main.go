@@ -6,7 +6,7 @@ import (
 
 	"github.com/pomodux/pomodux/internal/config"
 	"github.com/pomodux/pomodux/internal/logger"
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -16,37 +16,31 @@ var (
 )
 
 func main() {
-	app := &cli.App{
-		Name:    "pomodux-stats",
-		Usage:   "View timer statistics",
+	var limit int
+	var today bool
+	var all bool
+
+	rootCmd := &cobra.Command{
+		Use:     "pomodux-stats",
+		Short:   "View timer statistics",
+		Long:    "View statistics and history for pomodoro timer sessions",
 		Version: fmt.Sprintf("%s (built %s, commit %s)", version, buildTime, gitCommit),
-		Flags: []cli.Flag{
-			&cli.IntFlag{
-				Name:    "limit",
-				Aliases: []string{"l"},
-				Usage:   "Show last N sessions",
-				Value:   20,
-			},
-			&cli.BoolFlag{
-				Name:    "today",
-				Aliases: []string{"t"},
-				Usage:   "Show today's statistics",
-			},
-			&cli.BoolFlag{
-				Name:  "all",
-				Usage: "Show all sessions",
-			},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return showStats(limit, today, all)
 		},
-		Action: showStats,
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	rootCmd.Flags().IntVarP(&limit, "limit", "l", 20, "Show last N sessions")
+	rootCmd.Flags().BoolVarP(&today, "today", "t", false, "Show today's statistics")
+	rootCmd.Flags().BoolVar(&all, "all", false, "Show all sessions")
+
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func showStats(c *cli.Context) error {
+func showStats(limit int, today bool, all bool) error {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -65,9 +59,9 @@ func showStats(c *cli.Context) error {
 
 	// TODO: Load and display history
 	fmt.Println("Statistics view will be implemented in the next phase")
-	fmt.Printf("Options: limit=%d, today=%v, all=%v\n",
-		c.Int("limit"), c.Bool("today"), c.Bool("all"))
+	fmt.Printf("Options: limit=%d, today=%v, all=%v\n", limit, today, all)
 
 	return nil
 }
+
 

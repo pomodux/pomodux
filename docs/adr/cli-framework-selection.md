@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 ---
 
 # CLI Framework Selection for Pomodux
@@ -29,161 +29,102 @@ While Go's standard library `flag` package provides basic functionality, a dedic
 - Cross-platform compatibility (Linux, macOS, Windows)
 
 **Non-Functional Requirements:**
-- Minimal learning curve (project goal: learn Go)
 - Active maintenance and community support
 - Well-documented with examples
-- Lightweight (minimal binary size impact)
+- Industry-standard patterns and practices
+- Strong ecosystem and third-party integrations
 - Idiomatic Go patterns
 
 **Project Constraints:**
 - Simple command structure (no complex subcommands)
 - Two separate binaries (`pomodux` and `pomodux-stats`)
-- Learning-focused project (prefer simpler solutions)
+- Learning-focused project (exposure to industry standards)
 
 ## 2. Decision
 
-**Selected Solution:** `urfave/cli` (v2)
+**Selected Solution:** `spf13/cobra`
 
 ### 2.1 Rationale
 
-**Why urfave/cli?**
+**Why Cobra?**
 
-1. **Simplicity**: Clean, straightforward API that's easy to learn
-   - Perfect for a learning-focused project
-   - Less boilerplate than `cobra`
-   - Intuitive command definition
+1. **Industry Standard**: Dominant choice in the Go ecosystem
+   - 41.7K+ GitHub stars (as of 2025)
+   - Imported by 182,338+ projects
+   - Used by Kubernetes, GitHub CLI, Hugo, Docker, etcd
+   - De facto standard for Go CLIs
 
-2. **Sufficient Features**: Meets all requirements without over-engineering
+2. **Comprehensive Features**: Production-ready feature set
    - Command parsing: ✅
-   - Help generation: ✅
-   - Flag parsing: ✅
-   - Shell completion: ✅ (via `urfave/cli/v2/autocomplete`)
+   - Help generation: ✅ (highly polished)
+   - Flag parsing: ✅ (including persistent flags)
+   - Shell completion: ✅ (bash, zsh, fish, PowerShell)
    - Error handling: ✅
+   - Configuration integration: ✅ (Viper integration)
 
-3. **Active Maintenance**: Well-maintained with regular releases
-   - 11k+ GitHub stars
-   - Active development and community
-   - Used by major projects (Docker CLI originally used v1)
+3. **Active Maintenance**: Continuously maintained and improved
+   - Last updated August 2025
+   - Regular releases and security updates
+   - Large contributor base
+   - Well-established governance
 
-4. **Lightweight**: Minimal dependencies and binary size impact
-   - Fewer transitive dependencies than `cobra`
-   - Smaller binary footprint
-   - Faster compilation
+4. **Strong Ecosystem**: Rich tooling and integrations
+   - `cobra-cli` generator for scaffolding
+   - Seamless Viper integration for config management
+   - Extensive third-party plugins and extensions
+   - Abundant community resources and examples
 
-5. **Good Documentation**: Clear examples and tutorials
-   - Comprehensive README
-   - Many examples in repository
-   - Active community support
+5. **Professional UX**: Best-in-class user experience
+   - Automatic help and usage generation
+   - Sophisticated completion support
+   - Consistent error messages
+   - Support for command aliases and deprecation
 
-6. **Project Fit**: Matches Pomodux's simple command structure
-   - No complex subcommand hierarchies needed
-   - Two separate binaries (each can use urfave/cli independently)
-   - Simple argument parsing requirements
+6. **Learning Value**: Exposure to industry-standard tools
+   - Learning Cobra means understanding most Go CLI tools
+   - Transferable knowledge to major projects
+   - Industry-recognized patterns and practices
+   - Better for portfolio and future contributions
 
-### 2.2 Usage Example
+7. **Future-Proofing**: Well-suited for growth
+   - Handles simple commands elegantly
+   - Can scale to complex command hierarchies if needed
+   - No migration needed if requirements evolve
+   - Proven at scale in production environments
 
-**pomodux binary:**
-```go
-package main
+## 2. Alternatives Considered
 
-import (
-    "github.com/urfave/cli/v2"
-)
+### 2.1 Option A: urfave/cli (v2)
 
-func main() {
-    app := &cli.App{
-        Name:  "pomodux",
-        Usage: "Terminal-based Pomodoro timer",
-        Commands: []*cli.Command{
-            {
-                Name:  "start",
-                Usage: "Start a timer session",
-                UsageText: "pomodux start <duration|preset> [label]",
-                Action: startTimer,
-            },
-        },
-        Flags: []cli.Flag{
-            &cli.BoolFlag{
-                Name:    "version",
-                Aliases: []string{"v"},
-                Usage:   "Show version information",
-            },
-        },
-    }
-    
-    app.Run(os.Args)
-}
-```
-
-**pomodux-stats binary:**
-```go
-app := &cli.App{
-    Name:  "pomodux-stats",
-    Usage: "View timer statistics",
-    Flags: []cli.Flag{
-        &cli.IntFlag{
-            Name:    "limit",
-            Aliases: []string{"l"},
-            Usage:   "Show last N sessions",
-            Value:   20,
-        },
-        &cli.BoolFlag{
-            Name:    "today",
-            Aliases: []string{"t"},
-            Usage:   "Show today's statistics",
-        },
-        &cli.BoolFlag{
-            Name:  "all",
-            Usage: "Show all sessions",
-        },
-    },
-    Action: showStats,
-}
-```
-
-## 3. Alternatives Considered
-
-### 3.1 Option A: cobra
-
-**Approach:** Use `spf13/cobra` for CLI framework
+**Approach:** Use `urfave/cli` for CLI framework
 
 **Pros:**
-- Industry standard for complex CLIs (kubectl, docker, hugo)
-- Rich feature set (subcommands, command groups, plugins)
-- Excellent shell completion support
-- Powerful help generation
-- Large ecosystem and community
-- Well-documented with many examples
+- Simpler API than Cobra
+- Less boilerplate code
+- Lightweight with fewer dependencies
+- Good documentation
+- Active maintenance (23.7K stars, v3.4.1 released August 2025)
+- Used by Docker Machine, Drone, Gogs
 
 **Cons:**
-- More complex API (overkill for simple commands)
-- Steeper learning curve
-- More boilerplate code required
-- Larger dependency footprint
-- More features than needed for Pomodux
+- Significantly less popular (23.7K vs 41.7K stars)
+- Smaller ecosystem (270 contributors vs 182K+ importing projects)
+- Less sophisticated completion support
+- Fewer third-party integrations
+- Some projects migrating away to Cobra
+- Less exposure to industry-standard patterns
 
-**Example Complexity:**
-```go
-// cobra requires more setup
-var startCmd = &cobra.Command{
-    Use:   "start [duration|preset] [label]",
-    Short: "Start a timer",
-    Long:  "Start a timer session...",
-    Run: func(cmd *cobra.Command, args []string) {
-        // Implementation
-    },
-}
+**Migration Patterns:**
+Several projects have migrated from urfave/cli to Cobra, citing:
+- Better persistent flag handling
+- Better configuration management integration (Viper)
+- More robust for complex command structures
 
-func init() {
-    rootCmd.AddCommand(startCmd)
-}
-```
-
-**Rejected:** Over-engineered for Pomodux's simple command structure. Better suited for complex CLIs with many subcommands.
+**Rejected:** While simpler, Cobra's industry dominance, larger ecosystem, and better long-term support outweigh the modest increase in complexity. For a learning-focused project, exposure to industry-standard tools provides more value.
 
 ---
 
-### 3.2 Option B: Standard Library `flag`
+### 2.2 Option B: Standard Library `flag`
 
 **Approach:** Use Go's built-in `flag` package
 
@@ -220,30 +161,11 @@ case "--version":
 }
 ```
 
-**Rejected:** Too low-level, requires too much manual work. Poor UX for help and completion.
+**Rejected:** Too low-level, requires too much manual work. Poor UX for help and completion. Not suitable for user-facing CLI tools.
 
 ---
 
-### 3.3 Option C: urfave/cli v1
-
-**Approach:** Use `urfave/cli` v1 (legacy version)
-
-**Pros:**
-- Mature and stable
-- Well-tested in production
-- Similar API to v2
-
-**Cons:**
-- Deprecated (maintenance mode only)
-- No new features
-- Migration path to v2 exists
-- Not recommended for new projects
-
-**Rejected:** v1 is deprecated. v2 is the recommended version.
-
----
-
-### 3.4 Option D: kingpin
+### 2.3 Option C: kingpin
 
 **Approach:** Use `alecthomas/kingpin` for CLI parsing
 
@@ -253,181 +175,108 @@ case "--version":
 - Active maintenance
 
 **Cons:**
-- Smaller community than cobra/urfave
+- Much smaller community than Cobra/urfave
 - Less documentation and examples
 - Less familiar to most Go developers
+- Limited ecosystem
 
-**Rejected:** Less popular, fewer resources for learning.
+**Rejected:** Insufficient community support and resources for learning.
 
-## 4. Consequences
+---
 
-### 4.1 Positive
+### 2.4 Option D: kong
 
-**Development Velocity:**
-- Simple API enables rapid development
-- Less boilerplate than `cobra`
-- Quick to learn and implement
+**Approach:** Use `alecthomas/kong` for struct-based CLI parsing
 
-**Maintainability:**
-- Clean, readable code structure
-- Easy for contributors to understand
-- Well-documented framework
+**Pros:**
+- Declarative struct-based approach
+- Minimal boilerplate
+- Modern design
+
+**Cons:**
+- Very different paradigm from most Go CLIs
+- Much smaller adoption
+- Less documentation
+- Newer project with less production validation
+
+**Rejected:** Too unconventional for a learning-focused project. Limited industry adoption.
+
+## 3. Consequences
+
+### 3.1 Positive
+
+**Industry Alignment:**
+- Learning industry-standard tools and patterns
+- Code structure familiar to Go developers
+- Easier to attract contributors familiar with Cobra
+- Portfolio value (recognizable by employers)
+
+**Ecosystem Benefits:**
+- Extensive community resources and examples
+- Rich third-party integrations available
+- `cobra-cli` generator for scaffolding
+- Seamless Viper integration for configuration
 
 **User Experience:**
-- Automatic help generation
-- Shell completion support
-- Clear error messages
-- Professional CLI appearance
+- Polished help generation and formatting
+- Superior shell completion support
+- Consistent with major Go tools (kubectl, gh, hugo)
+- Professional-grade CLI UX
 
-**Learning Focus:**
-- Simpler framework aligns with project's learning goals
-- Less cognitive overhead
-- Focus on Go fundamentals, not framework complexity
+**Future-Proofing:**
+- Handles simple commands without overhead
+- Room to grow if complexity increases
+- No migration needed as project evolves
+- Proven at scale in production
 
-**Binary Size:**
-- Smaller dependency footprint than `cobra`
-- Faster compilation
-- Minimal impact on binary size
+**Maintainability:**
+- Clear command structure and separation
+- Well-documented patterns
+- Large knowledge base for troubleshooting
+- Active community support
 
-### 4.2 Negative
+### 3.2 Negative
 
-**Feature Limitations:**
-- Less powerful than `cobra` for complex subcommands
-- Fewer advanced features (not needed for Pomodux)
-- If command structure grows complex, might need migration
+**Increased Complexity:**
+- More boilerplate than urfave/cli
+- Steeper initial learning curve
+- More concepts to understand (root commands, subcommands, persistent flags)
+- Slightly larger binary size
 
-**Ecosystem:**
-- Smaller ecosystem than `cobra`
-- Fewer third-party integrations
-- Less community support (though still substantial)
+**Learning Overhead:**
+- More time needed to understand framework
+- More moving parts than simpler alternatives
+- May be overkill for simple command structure
+- Additional concepts beyond core Go
 
-**Migration Risk:**
-- If requirements change significantly, might need to migrate to `cobra`
-- Mitigation: Command structure is simple and unlikely to grow complex
+### 3.3 Trade-offs Accepted
 
-### 4.3 Risks and Mitigations
+**Complexity vs. Industry Standard:**
+- Accept: Modest increase in complexity
+- Gain: Exposure to industry-standard patterns and massive ecosystem
 
-**Risk: Command structure becomes too complex for urfave/cli**
-- **Likelihood:** Low (simple timer application)
-- **Impact:** Medium (would require migration)
-- **Mitigation:** Keep commands simple, document decision to avoid scope creep
+**Binary Size vs. Features:**
+- Accept: Slightly larger binary (still reasonable for CLI tool)
+- Gain: Superior UX, completion support, and professional polish
 
-**Risk: Shell completion not as polished as cobra**
-- **Likelihood:** Low (urfave/cli has good completion support)
-- **Impact:** Low (completion is nice-to-have, not critical)
-- **Mitigation:** Test completion on target shells, document usage
+**Learning Curve vs. Future Value:**
+- Accept: More upfront learning time
+- Gain: Transferable knowledge applicable to major Go projects
+
+### 3.4 Risks and Mitigations
+
+**Risk: Framework overhead for simple commands**
+- **Likelihood:** Medium (Pomodux has simple command structure)
+- **Impact:** Low (extra boilerplate is manageable)
+- **Mitigation:** Cobra handles simple commands well; overhead is minimal for our use case
+
+**Risk: Steeper learning curve slows development**
+- **Likelihood:** Low (Cobra is well-documented)
+- **Impact:** Low (one-time learning cost)
+- **Mitigation:** Excellent documentation and examples; `cobra-cli` generator simplifies setup
 
 **Risk: Framework becomes unmaintained**
-- **Likelihood:** Very low (active development, large user base)
-- **Impact:** Medium (would need to migrate)
-- **Mitigation:** Monitor maintenance status, migration path exists
+- **Likelihood:** Very low (182K+ projects depend on it)
+- **Impact:** High (would require migration)
+- **Mitigation:** Cobra is critical infrastructure for Go ecosystem; too big to fail
 
-## 5. Implementation Guidelines
-
-### 5.1 Command Structure
-
-**pomodux binary:**
-```go
-app := &cli.App{
-    Name:    "pomodux",
-    Usage:   "Terminal-based Pomodoro timer",
-    Version: version, // Injected at build time
-    
-    Commands: []*cli.Command{
-        {
-            Name:      "start",
-            Usage:     "Start a timer session",
-            UsageText: "pomodux start <duration|preset> [label]",
-            Action:    startTimer,
-        },
-    },
-    
-    Flags: []cli.Flag{
-        &cli.BoolFlag{
-            Name:    "version",
-            Aliases: []string{"v"},
-            Usage:   "Show version information",
-        },
-        &cli.BoolFlag{
-            Name:    "help",
-            Aliases: []string{"h"},
-            Usage:   "Show help",
-        },
-    },
-}
-```
-
-**pomodux-stats binary:**
-```go
-app := &cli.App{
-    Name:    "pomodux-stats",
-    Usage:   "View timer statistics",
-    Version: version,
-    
-    Flags: []cli.Flag{
-        &cli.IntFlag{
-            Name:    "limit",
-            Aliases: []string{"l"},
-            Usage:   "Show last N sessions",
-            Value:   20,
-        },
-        &cli.BoolFlag{
-            Name:    "today",
-            Aliases: []string{"t"},
-            Usage:   "Show today's statistics",
-        },
-        &cli.BoolFlag{
-            Name:  "all",
-            Usage: "Show all sessions",
-        },
-    },
-    
-    Action: showStats,
-}
-```
-
-### 5.2 Shell Completion
-
-**Installation:**
-```bash
-# Generate completion script
-pomodux --generate-bash-completion > /etc/bash_completion.d/pomodux
-pomodux --generate-zsh-completion > ~/.zsh/completions/_pomodux
-```
-
-**Implementation:**
-- Use `urfave/cli/v2/autocomplete` package
-- Generate completion scripts at build time or runtime
-- Document installation in README
-
-### 5.3 Error Handling
-
-**Invalid Commands:**
-```go
-app := &cli.App{
-    // ... config ...
-    ExitErrHandler: func(c *cli.Context, err error) {
-        if err != nil {
-            fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-            fmt.Fprintf(os.Stderr, "Run '%s --help' for usage\n", c.App.Name)
-            os.Exit(1)
-        }
-    },
-}
-```
-
-**Custom Validation:**
-```go
-func startTimer(c *cli.Context) error {
-    args := c.Args()
-    if args.Len() == 0 {
-        return cli.Exit("Error: duration or preset required", 1)
-    }
-    
-    durationOrPreset := args.Get(0)
-    label := args.Get(1) // Optional
-    
-    // Validate and start timer
-    return nil
-}
-```

@@ -23,3 +23,4 @@ func DefaultConfig() *Config {
 		},
 	}
 }
+

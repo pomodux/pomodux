@@ -108,3 +108,4 @@ func (t *Theme) BorderStyle() lipgloss.Style {
 	return style
 }
 
+

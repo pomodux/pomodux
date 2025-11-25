@@ -79,3 +79,4 @@ func TestTimer_Stop(t *testing.T) {
 	assert.Equal(t, StateStopped, timer.State())
 }
 
+

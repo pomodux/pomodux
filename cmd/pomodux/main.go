@@ -8,7 +8,7 @@ import (
 	"github.com/pomodux/pomodux/internal/config"
 	"github.com/pomodux/pomodux/internal/logger"
 	"github.com/pomodux/pomodux/internal/timer"
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -18,33 +18,30 @@ var (
 )
 
 func main() {
-	app := &cli.App{
-		Name:    "pomodux",
-		Usage:   "Terminal-based Pomodoro timer",
+	rootCmd := &cobra.Command{
+		Use:     "pomodux",
+		Short:   "Terminal-based Pomodoro timer",
+		Long:    "A terminal-based Pomodoro timer application",
 		Version: fmt.Sprintf("%s (built %s, commit %s)", version, buildTime, gitCommit),
-		Commands: []*cli.Command{
-			{
-				Name:      "start",
-				Usage:     "Start a timer session",
-				UsageText: "pomodux start <duration|preset> [label]",
-				Action:    startTimer,
-			},
-		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	startCmd := &cobra.Command{
+		Use:   "start <duration|preset> [label]",
+		Short: "Start a timer session",
+		Long:  "Start a timer session with a duration (e.g., 25m, 1h30m) or preset name, with an optional label",
+		Args:  cobra.RangeArgs(1, 2),
+		RunE:  startTimer,
+	}
+
+	rootCmd.AddCommand(startCmd)
+
+	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func startTimer(c *cli.Context) error {
-	args := c.Args()
-	if args.Len() == 0 {
-		return cli.Exit("Error: duration or preset required\n"+
-			"Usage: pomodux start <duration|preset> [label]", 2)
-	}
-
+func startTimer(cmd *cobra.Command, args []string) error {
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -62,8 +59,11 @@ func startTimer(c *cli.Context) error {
 	logger.WithField("component", "pomodux").Info("Starting pomodux")
 
 	// Parse duration or preset
-	durationOrPreset := args.Get(0)
-	label := args.Get(1)
+	durationOrPreset := args[0]
+	var label string
+	if len(args) > 1 {
+		label = args[1]
+	}
 
 	var duration time.Duration
 	var preset string
@@ -74,13 +74,12 @@ func startTimer(c *cli.Context) error {
 		// Not a duration, try as preset
 		presetDuration, ok := cfg.Timers[durationOrPreset]
 		if !ok {
-			return cli.Exit(fmt.Sprintf("Error: unknown preset %q\n"+
-				"Available presets: %v", durationOrPreset, getPresetNames(cfg.Timers)), 2)
+			return fmt.Errorf("unknown preset %q\nAvailable presets: %v", durationOrPreset, getPresetNames(cfg.Timers))
 		}
 
 		duration, err = time.ParseDuration(presetDuration)
 		if err != nil {
-			return cli.Exit(fmt.Sprintf("Error: invalid duration in preset %q: %v", durationOrPreset, err), 2)
+			return fmt.Errorf("invalid duration in preset %q: %w", durationOrPreset, err)
 		}
 		preset = durationOrPreset
 	}
@@ -97,11 +96,11 @@ func startTimer(c *cli.Context) error {
 	// Create and start timer
 	t, err := timer.NewTimer(duration, label, preset)
 	if err != nil {
-		return cli.Exit(fmt.Sprintf("Error: %v", err), 1)
+		return fmt.Errorf("failed to create timer: %w", err)
 	}
 
 	if err := t.Start(); err != nil {
-		return cli.Exit(fmt.Sprintf("Error: failed to start timer: %v", err), 1)
+		return fmt.Errorf("failed to start timer: %w", err)
 	}
 
 	logger.WithFields(map[string]interface{}{
@@ -132,4 +131,3 @@ func prettifyPresetName(preset string) string {
 	}
 	return string(preset[0]-32) + preset[1:]
 }
-

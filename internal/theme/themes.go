@@ -86,3 +86,4 @@ func CatppuccinMochaTheme() *Theme {
 	}
 }
 
+

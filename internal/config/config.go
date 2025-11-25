@@ -206,3 +206,4 @@ func applyDefaults(config *Config) {
 		config.Plugins.Directory = defaults.Plugins.Directory
 	}
 }
+

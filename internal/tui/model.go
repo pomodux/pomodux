@@ -104,3 +104,4 @@ func (m Model) View() string {
 	return "Timer TUI (placeholder)\n"
 }
 
+
