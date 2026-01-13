@@ -3,11 +3,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/google/uuid"
 	"github.com/pomodux/pomodux/internal/config"
 	"github.com/pomodux/pomodux/internal/logger"
 	"github.com/pomodux/pomodux/internal/timer"
+	"github.com/pomodux/pomodux/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -58,62 +63,133 @@ func startTimer(cmd *cobra.Command, args []string) error {
 
 	logger.WithField("component", "pomodux").Info("Starting pomodux")
 
-	// Parse duration or preset
-	durationOrPreset := args[0]
-	var label string
-	if len(args) > 1 {
-		label = args[1]
-	}
+	// Check for existing timer state (singleton enforcement)
+	statePath := config.TimerStatePath()
+	var t *timer.Timer
+	var sessionID string
 
-	var duration time.Duration
-	var preset string
-
-	// Try to parse as duration first
-	duration, err = time.ParseDuration(durationOrPreset)
-	if err != nil {
-		// Not a duration, try as preset
-		presetDuration, ok := cfg.Timers[durationOrPreset]
-		if !ok {
-			return fmt.Errorf("unknown preset %q\nAvailable presets: %v", durationOrPreset, getPresetNames(cfg.Timers))
-		}
-
-		duration, err = time.ParseDuration(presetDuration)
+	if stateExists(statePath) {
+		state, err := timer.LoadState(statePath)
 		if err != nil {
-			return fmt.Errorf("invalid duration in preset %q: %w", durationOrPreset, err)
-		}
-		preset = durationOrPreset
-	}
-
-	// Default label if not provided
-	if label == "" {
-		if preset != "" {
-			label = prettifyPresetName(preset)
+			logger.WithError(err).Warn("Failed to load existing timer state, starting new timer")
+			// Continue with new timer creation
 		} else {
-			label = "Generic timer session"
+			// Check if process is still alive
+			if state.PID > 0 && timer.IsProcessAlive(state.PID) {
+				return fmt.Errorf("timer already running in process %d", state.PID)
+			}
+
+			// Process is dead, auto-resume
+			logger.WithField("session_id", state.SessionID).Info("Resuming interrupted timer")
+			t, err = timer.ResumeFromState(state)
+			if err != nil {
+				return fmt.Errorf("failed to resume timer: %w", err)
+			}
+			sessionID = state.SessionID
 		}
 	}
 
-	// Create and start timer
-	t, err := timer.NewTimer(duration, label, preset)
-	if err != nil {
-		return fmt.Errorf("failed to create timer: %w", err)
+	// If no timer was resumed, create a new one
+	if t == nil {
+		// Parse duration or preset
+		durationOrPreset := args[0]
+		var label string
+		if len(args) > 1 {
+			label = args[1]
+		}
+
+		var duration time.Duration
+		var preset string
+
+		// Try to parse as duration first
+		duration, err = time.ParseDuration(durationOrPreset)
+		if err != nil {
+			// Not a duration, try as preset
+			presetDuration, ok := cfg.Timers[durationOrPreset]
+			if !ok {
+				return fmt.Errorf("unknown preset %q\nAvailable presets: %v", durationOrPreset, getPresetNames(cfg.Timers))
+			}
+
+			duration, err = time.ParseDuration(presetDuration)
+			if err != nil {
+				return fmt.Errorf("invalid duration in preset %q: %w", durationOrPreset, err)
+			}
+			preset = durationOrPreset
+		}
+
+		// Default label if not provided
+		if label == "" {
+			if preset != "" {
+				label = prettifyPresetName(preset)
+			} else {
+				label = "Generic timer session"
+			}
+		}
+
+		// Generate session ID
+		sessionID = uuid.New().String()
+
+		// Create and start timer
+		t, err = timer.NewTimer(duration, label, preset)
+		if err != nil {
+			return fmt.Errorf("failed to create timer: %w", err)
+		}
+
+		if err := t.Start(); err != nil {
+			return fmt.Errorf("failed to start timer: %w", err)
+		}
+
+		logger.WithFields(map[string]interface{}{
+			"session_id": sessionID,
+			"duration":   duration,
+			"label":      label,
+			"preset":     preset,
+		}).Info("Timer started")
 	}
 
-	if err := t.Start(); err != nil {
-		return fmt.Errorf("failed to start timer: %w", err)
+	// Save initial state
+	if err := timer.SaveState(t, sessionID, statePath); err != nil {
+		logger.WithError(err).Warn("Failed to save initial timer state")
 	}
 
-	logger.WithFields(map[string]interface{}{
-		"duration": duration,
-		"label":    label,
-		"preset":   preset,
-	}).Info("Timer started")
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	// TODO: Start TUI
-	fmt.Printf("Timer started for %v with label: %s\n", duration, label)
-	fmt.Println("TUI will be implemented in the next phase")
+	// Start TUI
+	model := tui.NewModel(t, sessionID, statePath)
+	program := tea.NewProgram(model, tea.WithAltScreen())
+
+	// Handle signals in a goroutine (this is the exception - signal handling)
+	go func() {
+		sig := <-sigChan
+		logger.WithField("signal", sig.String()).Info("Received interrupt signal, saving state and exiting")
+
+		// Save state before exit
+		if err := timer.SaveState(t, sessionID, statePath); err != nil {
+			logger.WithError(err).Error("Failed to save state on interrupt")
+		}
+
+		program.Quit()
+	}()
+
+	// Run TUI
+	if _, err := program.Run(); err != nil {
+		return fmt.Errorf("TUI error: %w", err)
+	}
+
+	// Clean up state file on normal exit
+	if err := timer.DeleteState(statePath); err != nil {
+		logger.WithError(err).Warn("Failed to delete state file")
+	}
 
 	return nil
+}
+
+// stateExists checks if the state file exists
+func stateExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 func getPresetNames(timers map[string]string) []string {

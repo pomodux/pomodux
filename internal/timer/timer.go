@@ -157,3 +157,32 @@ func (t *Timer) TotalPausedDuration() time.Duration {
 func (t *Timer) StartTime() time.Time {
 	return t.startTime
 }
+
+// FromState creates a Timer instance from a TimerState
+// Used for resuming a timer from saved state
+func FromState(state *TimerState) (*Timer, error) {
+	return ResumeFromState(state)
+}
+
+// ToState converts a Timer to TimerState for persistence
+func (t *Timer) ToState(sessionID string) *TimerState {
+	remaining := t.Remaining()
+	durationStr := formatDuration(t.duration)
+	remainingStr := formatDuration(remaining)
+	pausedDurationStr := formatDuration(t.TotalPausedDuration())
+
+	return &TimerState{
+		Version:        "1.0",
+		SessionID:      sessionID,
+		PID:            0, // Will be set by SaveState
+		StartedAt:      t.startTime,
+		Duration:       durationStr,
+		Preset:         t.preset,
+		Label:          t.label,
+		Remaining:      remainingStr,
+		IsPaused:       t.state == StatePaused,
+		PausedCount:    t.pausedCount,
+		PausedDuration: pausedDurationStr,
+		LastUpdated:    time.Now(),
+	}
+}
