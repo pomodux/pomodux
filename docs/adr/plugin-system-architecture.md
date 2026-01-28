@@ -77,46 +77,36 @@ Pomodux aims to be a highly extensible terminal timer application. Users and dev
 - **Performance:** Poorly written plugins could impact performance (mitigated by async event dispatch)
 - **Complexity:** Plugin manager adds architectural complexity
 
-## 5. Implementation and Validation Results
+## 5. Implementation Status
 
-The plugin system has been successfully implemented and integrated into Pomodux:
+> **Status: MVP — Event type definitions only.**
+>
+> The full Lua-based plugin system described in this ADR has **not yet been implemented**. The `gopher-lua` dependency has not been added to `go.mod`. What exists today is the foundational event architecture that the plugin system will build on.
 
-### 5.1 Core Implementation
-- **PluginManager** loads plugins from configurable directory, dispatches events, and manages plugin lifecycle
-- **Event System** supports multiple timer events, examples: `timer_started`, `timer_completed`, `timer_paused`, `timer_resumed`, `timer_stopped`
-- **Lua Integration** using gopher-lua with proper sandboxing and error handling
-- **Plugin API** provides registration, hook management, logging, and notification capabilities
+### 5.1 What Is Implemented (MVP)
+- **Event type definitions** in `internal/plugin/events.go` — nine event types covering timer and application lifecycle (`TimerStarted`, `TimerPaused`, `TimerResumed`, `TimerStopped`, `TimerCompleted`, `ApplicationStarted`, `ApplicationStopping`, `ApplicationInterrupted`, `ConfigurationLoaded`)
+- **Event emitter** struct with an `Emit()` method that logs events via the logger — serves as a placeholder for future plugin dispatch
+- Events are emitted from `cmd/pomodux/main.go` at the appropriate lifecycle points
 
-### 5.2 Example Plugins
-- **Mako Notification Plugin**: Sends desktop notifications using `notify-send` for all timer events
-- **Debug Events Plugin**: Prints debug messages for all timer events to verify system functionality
-- **Plugin Architecture**: Self-registering plugins with event hooks and configuration
+### 5.2 What Is NOT Yet Implemented
+- **PluginManager** — no plugin loading, lifecycle management, or directory scanning
+- **Lua integration** — `gopher-lua` is not a dependency; no Lua states are created
+- **Plugin API surface** — no registration, hook management, or notification capabilities exposed to plugins
+- **Sandboxing** — no isolation or security boundary exists
+- **Example plugins** — no plugin files exist in the repository
+- **Plugin configuration** — no plugin directory setting in the config schema
+- **Async event dispatch** — `Emit()` logs synchronously
 
-### 5.3 Validation Results
-- **Event Dispatch**: All 5 timer events properly emitted and processed by plugins
-- **Plugin Loading**: Plugins load from `~/.config/pomodux/plugins/` directory
-- **Hook Execution**: Lua hooks execute correctly with proper event data
-- **Concurrency**: Event processing is asynchronous and non-blocking
-- **Error Handling**: Plugin errors are caught and logged without affecting timer operation
+### 5.3 Next Steps
+1. Add `github.com/yuin/gopher-lua` to `go.mod`
+2. Implement `PluginManager` with directory scanning and plugin lifecycle
+3. Create Lua sandbox with restricted API surface
+4. Wire `Emit()` to dispatch events to loaded plugins
+5. Write example plugins (notification, debug logging)
+6. Add plugin directory to config schema
+7. Document plugin authoring guide
 
-### 5.4 Performance Characteristics
-- **Event Dispatch**: Non-blocking with minimal latency
-- **Plugin Loading**: Fast startup with lazy loading
-- **Memory Usage**: Each plugin has isolated Lua state with minimal overhead
-- **Timer Accuracy**: No measurable impact on timer precision
-
-### 5.5 Integration Status
-- **Timer Engine**: Fully integrated with event emission on all lifecycle changes
-- **Configuration**: Plugin directory configurable via XDG-compliant config system
-
-## 6. Integration Plan
-- **Timer Engine:** ✅ Fully integrated with event emission on all lifecycle changes
-- **Documentation:** ✅ Plugin authoring guide and API reference available
-- **Configuration:** ✅ XDG-compliant plugin directory configuration
-
-## 8. References
+## 6. References
 - [gopher-lua](https://github.com/yuin/gopher-lua)
 - [Neovim Plugin System](https://neovim.io/)
-- [Pomodux Plugin System Implementation](../internal/plugin/)
-- [Example Plugins](../plugins/)
 

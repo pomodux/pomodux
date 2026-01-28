@@ -30,7 +30,7 @@ We follow the TDD cycle:
 
 **Coverage Exclusions:**
 - Main entry points (`main()` functions)
-- TUI rendering code (visual output, difficult to test)
+- TUI rendering internals (low-level lipgloss styling, covered partially by `teatest` integration tests)
 - Terminal-specific I/O (handled by Bubbletea framework)
 - Error message formatting (low risk, high maintenance)
 
@@ -183,28 +183,81 @@ func TestConfigLoad(t *testing.T) {
 
 #### 3. TUI Tests
 
-**Scope:** Test Bubbletea model logic (not rendering)
+**Scope:** Test Bubbletea model logic and rendered output
 
 **Approach:**
-- Test model state transitions
-- Test message handling
-- Test command generation
-- **Do not** test visual rendering (handled by Bubbletea)
+- Test model state transitions via `Update()` calls
+- Test message handling and command generation
+- Test rendered output using `teatest` for integration-level TUI verification
 
-**Example:**
+##### 3a. Unit Tests (Model Logic)
+
+Test state transitions and message handling without rendering:
+
 ```go
 func TestModelPause(t *testing.T) {
     m := initialModel()
     m.timer.Start()
-    
+
     // Simulate 'p' keypress
     msg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}}
     newModel, cmd := m.Update(msg)
-    
+
     assert.True(t, newModel.timer.IsPaused())
     assert.Nil(t, cmd) // No command needed
 }
 ```
+
+##### 3b. Integration Tests (Rendered Output via teatest)
+
+**Library:** `github.com/charmbracelet/x/exp/teatest`
+
+**Rationale:**
+- TUI rendering bugs (layout, theming, component visibility) cannot be caught by model-logic unit tests alone
+- `teatest` runs a real Bubbletea program in a virtual terminal, enabling assertions on rendered output
+- Prevents regressions in visual output across refactors and theme changes
+- Avoids reliance on manual verification for every change
+
+**What to test with teatest:**
+- Correct components render in each state (running, paused, completed)
+- Time display shows expected format (mm:ss)
+- Status indicator reflects current state
+- Control legend visibility
+- Confirmation dialog appears on stop key
+- Terminal size warning renders when terminal is too small
+- Theme colors apply correctly (spot-check via golden files)
+
+**Example:**
+```go
+func TestRunningView(t *testing.T) {
+    m := initialModel()
+    tm := teatest.NewModel(t, m, teatest.WithInitialTermSize(80, 24))
+
+    // Send a start key or init message
+    tm.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'s'}})
+
+    // Wait for output and assert on rendered content
+    teatest.WaitFor(t, tm.Output(), func(bts []byte) bool {
+        return strings.Contains(string(bts), "RUNNING")
+    }, teatest.WithDuration(3*time.Second))
+}
+```
+
+**Golden file testing** can be used for full-screen snapshots:
+```go
+func TestRunningViewGolden(t *testing.T) {
+    m := initialModel()
+    tm := teatest.NewModel(t, m, teatest.WithInitialTermSize(80, 24))
+
+    // Allow the model to render
+    time.Sleep(500 * time.Millisecond)
+
+    out := tm.FinalOutput(t)
+    teatest.RequireEqualOutput(t, out) // Compares against testdata golden file
+}
+```
+
+**Note:** Golden file tests are more brittle and should be used sparingly for critical layouts. Prefer string-contains assertions for most cases.
 
 ## Test Coverage
 
@@ -496,6 +549,7 @@ func TestParseDuration(t *testing.T) {
 - `go test` - Standard Go testing tool
 - `github.com/stretchr/testify` - Assertions
 - `github.com/benbjohnson/clock` - Time mocking
+- `github.com/charmbracelet/x/exp/teatest` - TUI integration testing
 
 ### Optional Tools
 
