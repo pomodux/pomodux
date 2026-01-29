@@ -56,7 +56,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Wireframe:**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
@@ -110,7 +110,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Wireframe:**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
@@ -168,7 +168,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Initial (Closing in 3):**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
@@ -183,7 +183,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **After 1 second (Closing in 2):**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
@@ -198,7 +198,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **After 2 seconds (Closing in 1):**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
@@ -257,7 +257,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Wireframe:**
 ```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │

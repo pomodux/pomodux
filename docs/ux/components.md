@@ -33,7 +33,6 @@ This document provides detailed specifications for all UI components in the Pomo
 **Purpose:** Visual containment of timer display, provides window frame
 
 **Properties:**
-- **Title:** "Pomodux Timer" (static text)
 - **Border Style:** Theme-dependent (rounded/square/double/none)
 - **Border Color:** Theme border color
 - **Width:** Responsive to terminal size (centered)
@@ -76,7 +75,7 @@ This document provides detailed specifications for all UI components in the Pomo
   - "longbreak" → "Long Break"
   - "custom_preset" → "Custom Preset"
 - **Text Style:** Primary color, regular weight
-- **Position:** Below window title, above progress bar
+- **Position:** Top of window content, above progress bar
 - **Alignment:** Left-aligned within window
 
 **States:**

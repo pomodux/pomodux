@@ -3,6 +3,7 @@ package logger
 import (
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/sirupsen/logrus"
 )
@@ -140,5 +141,32 @@ func WithError(err error) *logrus.Entry {
 		Init(Config{Level: "info", File: ""})
 	}
 	return Logger.WithError(err)
+}
+
+// RedirectToFile redirects the logger output to a file
+// Creates the directory if it doesn't exist
+// Returns an error if the file cannot be opened
+func RedirectToFile(path string) error {
+	if Logger == nil {
+		// Initialize with defaults if not already initialized
+		Init(Config{Level: "info", File: ""})
+	}
+
+	// Create directory if it doesn't exist
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	// Open file for appending
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+
+	// Set file as logger output
+	Logger.SetOutput(file)
+
+	return nil
 }
 

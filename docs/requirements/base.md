@@ -1231,7 +1231,7 @@ LEARN MORE:
 #### Running Timer State
 
 ```
-┌─ Pomodoro Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │
 │                                                              │
@@ -1245,7 +1245,6 @@ LEARN MORE:
 ```
 
 **Elements:**
-- Title: "Pomodoro Timer"
 - Session Type + Label: "Work Session: Implementing authentication"
 - Progress Bar: Unicode blocks, 60% filled, color-coded
 - Time Remaining: "15:23" (MM:SS format)
@@ -1257,7 +1256,7 @@ LEARN MORE:
 #### 8.1.2 Paused Timer State
 
 ```
-┌─ Pomodoro Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │
 │                                                              │
@@ -1280,7 +1279,7 @@ LEARN MORE:
 #### 8.1.3 Completion State
 
 ```
-┌─ Pomodoro Timer ─────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────┐
 │                                                              │
 │  Work Session: Implementing authentication                   │
 │                                                              │

@@ -149,6 +149,21 @@ func TimerStatePath() string {
 	return filepath.Join(StatePath(), "timer_state.json")
 }
 
+// LogFilePath returns the XDG-compliant default log file path
+// Uses $XDG_CACHE_HOME/pomodux/pomodux.log or ~/.cache/pomodux/pomodux.log as fallback
+func LogFilePath() string {
+	cacheHome := os.Getenv("XDG_CACHE_HOME")
+	if cacheHome == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			// Fallback if home directory can't be determined
+			return filepath.Join(".cache", "pomodux", "pomodux.log")
+		}
+		cacheHome = filepath.Join(home, ".cache")
+	}
+	return filepath.Join(cacheHome, "pomodux", "pomodux.log")
+}
+
 // validateAndApplyDefaults validates the config and applies defaults for missing fields
 func validateAndApplyDefaults(config *Config) error {
 	// Apply defaults for missing fields

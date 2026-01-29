@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomodux/pomodux/internal/logger"
 	"github.com/pomodux/pomodux/internal/theme"
 	"github.com/pomodux/pomodux/internal/timer"
 )
@@ -18,14 +19,18 @@ const (
 
 // Model represents the TUI model
 type Model struct {
-	timer      *timer.Timer
-	progress   progress.Model
-	theme      *theme.Theme
-	width      int
-	height     int
-	quitting   bool
-	sessionID  string
-	statePath  string
+	timer                        *timer.Timer
+	progress                     progress.Model
+	theme                        *theme.Theme
+	width                        int
+	height                       int
+	quitting                     bool
+	sessionID                    string
+	statePath                    string
+	showConfirmation             bool
+	wasRunningBeforeConfirmation bool
+	showCompletion               bool
+	completionCountdown          int
 }
 
 // NewModel creates a new TUI model. If theme is nil, the default theme is used.
@@ -71,6 +76,12 @@ func firstRune(s string, fallback rune) rune {
 
 // Init initializes the model
 func (m Model) Init() tea.Cmd {
+	logger.WithFields(map[string]interface{}{
+		"component": "tui",
+		"event":     "tui_initialized",
+		"session_id": m.sessionID,
+		"timer_state": string(m.timer.State()),
+	}).Info("TUI initialized")
 	// Save initial state and start periodic saves
 	return tea.Batch(
 		tickCmd(),
@@ -93,6 +104,9 @@ func tickCmd() tea.Cmd {
 // saveStateMsg is a message to trigger state persistence
 type saveStateMsg struct{}
 
+// completionTickMsg is a message sent every second during completion countdown
+type completionTickMsg struct{}
+
 // saveStateCmd returns a command that sends a save state message after 5 seconds
 func saveStateCmd() tea.Cmd {
 	return tea.Tick(5*time.Second, func(t time.Time) tea.Msg {
@@ -110,21 +124,99 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.progress.Width > 80 {
 			m.progress.Width = 80
 		}
+		logger.WithFields(map[string]interface{}{
+			"component": "tui",
+			"event":     "window_resize",
+			"width":     msg.Width,
+			"height":    msg.Height,
+			"progress_width": m.progress.Width,
+		}).Debug("Window resized")
 		return m, nil
 
 	case tea.KeyMsg:
-		switch msg.String() {
+		key := msg.String()
+		logger.WithFields(map[string]interface{}{
+			"component":        "tui",
+			"event":            "keypress",
+			"key":              key,
+			"timer_state":      string(m.timer.State()),
+			"show_confirmation": m.showConfirmation,
+			"show_completion":  m.showCompletion,
+		}).Debug("Key pressed")
+
+		// Handle confirmation state first
+		if m.showConfirmation {
+			switch key {
+			case "y", "Y":
+				// Confirm stop
+				logger.WithFields(map[string]interface{}{
+					"component": "tui",
+					"event":     "confirmation_confirmed",
+					"session_id": m.sessionID,
+				}).Info("Stop confirmed by user")
+				m.timer.Stop()
+				m.saveState()
+				m.quitting = true
+				return m, tea.Quit
+			case "n", "N", "esc":
+				// Cancel confirmation
+				logger.WithFields(map[string]interface{}{
+					"component":        "tui",
+					"event":            "confirmation_cancelled",
+					"was_running":      m.wasRunningBeforeConfirmation,
+				}).Info("Stop cancelled by user")
+				m.showConfirmation = false
+				if m.wasRunningBeforeConfirmation {
+					m.timer.Resume()
+					m.saveState()
+					return m, tea.Batch(
+						tickCmd(),
+						saveStateCmd(),
+					)
+				}
+				return m, nil
+			default:
+				// Other keys ignored in confirmation state
+				logger.WithFields(map[string]interface{}{
+					"component": "tui",
+					"event":     "key_ignored",
+					"key":       key,
+					"reason":    "in_confirmation_state",
+				}).Debug("Key ignored in confirmation state")
+				return m, nil
+			}
+		}
+
+		// Normal key handling (not in confirmation state)
+		switch key {
 		case "p":
 			if m.timer.State() == timer.StateRunning {
+				logger.WithFields(map[string]interface{}{
+					"component": "tui",
+					"event":     "pause",
+					"session_id": m.sessionID,
+				}).Info("Timer paused")
 				m.timer.Pause()
 				// Save state on pause
 				m.saveState()
 				// Stop periodic saves while paused
 				return m, nil
 			}
+			logger.WithFields(map[string]interface{}{
+				"component": "tui",
+				"event":     "key_ignored",
+				"key":       key,
+				"reason":    "timer_not_running",
+				"timer_state": string(m.timer.State()),
+			}).Debug("Pause key ignored - timer not running")
 			return m, nil
 		case "r":
 			if m.timer.State() == timer.StatePaused {
+				logger.WithFields(map[string]interface{}{
+					"component": "tui",
+					"event":     "resume",
+					"session_id": m.sessionID,
+				}).Info("Timer resumed")
 				m.timer.Resume()
 				// Save state on resume
 				m.saveState()
@@ -134,34 +226,104 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					saveStateCmd(),
 				)
 			}
+			logger.WithFields(map[string]interface{}{
+				"component": "tui",
+				"event":     "key_ignored",
+				"key":       key,
+				"reason":    "timer_not_paused",
+				"timer_state": string(m.timer.State()),
+			}).Debug("Resume key ignored - timer not paused")
 			return m, nil
 		case "s", "q":
-			m.timer.Stop()
-			// Save final state before exit
-			m.saveState()
-			m.quitting = true
-			return m, tea.Quit
+			// Enter confirmation state
+			logger.WithFields(map[string]interface{}{
+				"component":        "tui",
+				"event":            "stop_requested",
+				"session_id":       m.sessionID,
+				"timer_state":      string(m.timer.State()),
+			}).Info("Stop requested - entering confirmation")
+			m.showConfirmation = true
+			m.wasRunningBeforeConfirmation = (m.timer.State() == timer.StateRunning)
+			if m.timer.State() == timer.StateRunning {
+				m.timer.Pause()
+				m.saveState()
+			}
+			return m, nil
 		case "ctrl+c":
+			// Emergency exit - bypass confirmation
+			logger.WithFields(map[string]interface{}{
+				"component": "tui",
+				"event":     "emergency_exit",
+				"session_id": m.sessionID,
+			}).Warn("Emergency exit (Ctrl+C) - bypassing confirmation")
+			m.timer.Stop()
 			// Save state on interrupt
 			m.saveState()
 			m.quitting = true
 			return m, tea.Quit
+		default:
+			logger.WithFields(map[string]interface{}{
+				"component": "tui",
+				"event":     "key_ignored",
+				"key":       key,
+				"reason":    "unknown_key",
+			}).Debug("Unknown key ignored")
+			return m, nil
 		}
 
 	case tickMsg:
 		if m.timer.State() == timer.StateRunning {
 			if m.timer.IsCompleted() {
-				// Timer completed - save final state
-				m.saveState()
-				return m, tea.Quit
+				// Enter completion countdown state
+				if !m.showCompletion {
+					logger.WithFields(map[string]interface{}{
+						"component": "tui",
+						"event":     "timer_completed",
+						"session_id": m.sessionID,
+					}).Info("Timer completed - starting countdown")
+					m.showCompletion = true
+					m.completionCountdown = 3
+					m.saveState()
+					return m, tea.Tick(1*time.Second, func(t time.Time) tea.Msg {
+						return completionTickMsg{}
+					})
+				}
 			}
 			return m, tickCmd()
+		}
+		return m, nil
+
+	case completionTickMsg:
+		if m.showCompletion {
+			m.completionCountdown--
+			logger.WithFields(map[string]interface{}{
+				"component":         "tui",
+				"event":             "completion_countdown",
+				"session_id":        m.sessionID,
+				"countdown":         m.completionCountdown,
+			}).Debug("Completion countdown tick")
+			if m.completionCountdown <= 0 {
+				logger.WithFields(map[string]interface{}{
+					"component": "tui",
+					"event":     "completion_exit",
+					"session_id": m.sessionID,
+				}).Info("Completion countdown finished - exiting")
+				return m, tea.Quit
+			}
+			return m, tea.Tick(1*time.Second, func(t time.Time) tea.Msg {
+				return completionTickMsg{}
+			})
 		}
 		return m, nil
 
 	case saveStateMsg:
 		// Periodic state save (every 5 seconds while running)
 		if m.timer.State() == timer.StateRunning {
+			logger.WithFields(map[string]interface{}{
+				"component": "tui",
+				"event":     "periodic_state_save",
+				"session_id": m.sessionID,
+			}).Debug("Periodic state save")
 			m.saveState()
 			// Continue periodic saves
 			return m, saveStateCmd()
@@ -176,8 +338,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // saveState saves the current timer state to disk
 func (m Model) saveState() {
 	if err := timer.SaveState(m.timer, m.sessionID, m.statePath); err != nil {
-		// Log error but don't fail - state persistence is best-effort
-		// In a real implementation, we might want to show this in the UI
+		logger.WithError(err).WithFields(map[string]interface{}{
+			"component": "tui",
+			"event":     "state_save_error",
+			"session_id": m.sessionID,
+			"state_path": m.statePath,
+		}).Error("Failed to save timer state")
+	} else {
+		logger.WithFields(map[string]interface{}{
+			"component": "tui",
+			"event":     "state_saved",
+			"session_id": m.sessionID,
+			"timer_state": string(m.timer.State()),
+		}).Debug("Timer state saved")
 	}
 }
 
@@ -219,26 +392,30 @@ func (m Model) View() string {
 	timeLine := primaryStyle.Render(timeDisplay)
 	// Status
 	statusLine := m.statusLine(th)
-	// Control legend or completion message
+	// Control legend, confirmation prompt, or completion message
 	mutedStyle := lipgloss.NewStyle().Foreground(th.Colors.TextMuted)
 	successStyle := lipgloss.NewStyle().Foreground(th.Colors.Success)
+	warningStyle := lipgloss.NewStyle().Foreground(th.Colors.Warning)
 
 	state := m.timer.State()
 	var bottomLine string
-	if state == timer.StateCompleted {
+
+	// Priority: completion > confirmation > normal state
+	if m.showCompletion {
+		bottomLine = successStyle.Render(fmt.Sprintf("Session saved! Closing in %d.", m.completionCountdown))
+	} else if m.showConfirmation {
+		bottomLine = warningStyle.Render("Stop timer and exit? [y]es / [n]o")
+	} else if state == timer.StateCompleted {
 		bottomLine = successStyle.Render("Session saved!")
 	} else {
 		if state == timer.StatePaused {
-			bottomLine = mutedStyle.Render("[r] resume  [s] stop  [q] quit  [Ctrl+C] emergency exit")
+			bottomLine = mutedStyle.Render("[r]esume  [s]top")
 		} else {
-			bottomLine = mutedStyle.Render("[p] pause  [s] stop  [q] quit  [Ctrl+C] emergency exit")
+			bottomLine = mutedStyle.Render("[p]ause  [s]top")
 		}
 	}
 
-	titleLine := th.TitleStyle().Render("Pomodoro Timer")
 	inner := lipgloss.JoinVertical(lipgloss.Left,
-		titleLine,
-		"",
 		sessionHeader,
 		"",
 		progressBar,

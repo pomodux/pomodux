@@ -162,6 +162,16 @@ func startTimer(cmd *cobra.Command, args []string) error {
 		logger.WithError(err).Warn("Failed to save initial timer state")
 	}
 
+	// Redirect logger to file if not configured, to prevent TUI interference
+	if cfg.Logging.File == "" {
+		logPath := config.LogFilePath()
+		if err := logger.RedirectToFile(logPath); err != nil {
+			logger.WithError(err).WithField("log_path", logPath).Warn("Failed to redirect logger to file, TUI may be corrupted by log output")
+		} else {
+			logger.WithField("log_path", logPath).Info("Logger redirected to file for TUI compatibility")
+		}
+	}
+
 	// Set up signal handling for graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
