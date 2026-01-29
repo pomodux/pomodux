@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pomodux/pomodux/internal/config"
 	"github.com/pomodux/pomodux/internal/logger"
+	"github.com/pomodux/pomodux/internal/theme"
 	"github.com/pomodux/pomodux/internal/timer"
 	"github.com/pomodux/pomodux/internal/tui"
 	"github.com/spf13/cobra"
@@ -61,7 +62,16 @@ func startTimer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize logger: %w", err)
 	}
 
-	logger.WithField("component", "pomodux").Info("Starting pomodux")
+	// Resolve theme from config (fallback to default for unknown names)
+	selectedTheme := theme.GetTheme(cfg.Theme)
+	if cfg.Theme != "default" && cfg.Theme != "nord" && cfg.Theme != "catppuccin-mocha" {
+		logger.WithField("theme", cfg.Theme).Warn("Unknown theme name, using default theme")
+	}
+
+	logger.WithFields(map[string]interface{}{
+		"component": "pomodux",
+		"theme":     selectedTheme.Name,
+	}).Infof("Starting pomodux (theme: %s)", selectedTheme.Name)
 
 	// Check for existing timer state (singleton enforcement)
 	statePath := config.TimerStatePath()
@@ -156,8 +166,8 @@ func startTimer(cmd *cobra.Command, args []string) error {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	// Start TUI
-	model := tui.NewModel(t, sessionID, statePath)
+	// Start TUI with resolved theme
+	model := tui.NewModel(t, sessionID, statePath, selectedTheme)
 	program := tea.NewProgram(model, tea.WithAltScreen())
 
 	// Handle signals in a goroutine (this is the exception - signal handling)
