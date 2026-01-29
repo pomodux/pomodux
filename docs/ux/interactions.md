@@ -90,86 +90,58 @@ This document specifies all keyboard controls, focus management, input handling,
 
 ---
 
-### Control Legend (Overlay)
+### Action Selection (Inline)
 
 **Display Rules:**
-- **Initial Display:** Appears below main window when timer starts
-- **Fade Behavior:** Visible for 3-5 seconds, then fades out over ~1 second
-- **Position:** Below main window border, centered
-- **Component Type:** Overlay (not part of main window content)
-- Shows only valid primary keys for current state
+- **Always Visible:** No fading, always displayed inside main window
+- **Position:** Below status indicator, inside main window border
+- **Component Type:** Inline (part of main window content)
+- Shows state-specific actions
 - Brief descriptions (verb form)
 - Keys highlighted in brackets
 
 **Visual Hierarchy:**
-- Primary actions: Normal/muted text color
-- Minimal display: Only essential controls shown
-- Secondary actions: Not displayed (Ctrl+C is universal terminal convention, `s` is alias)
+- Actions: Normal/muted text color
+- Confirmation: May use warning color for question text
+- Keys highlighted in brackets
 
-**Running State Legend:**
+**Running State:**
 ```
-[p] pause  [q] quit
-```
-
-**Paused State Legend:**
-```
-[r] resume  [q] quit
+[p]ause  [s]top
 ```
 
-**Fade Behavior:**
-- **Running State:** 
-  - Visible for 3-5 seconds after timer starts
-  - Fades out over ~1 second using color-based dimming (4-5 steps)
-  - Stays hidden during active countdown
-- **Paused State:**
-  - Legend reappears immediately when paused
-  - Always visible while paused (does not fade)
-  - Shows updated controls: `[r] resume [q] quit`
-- **Resume to Running:**
-  - Legend remains visible for 3-5 seconds after resume
-  - Then fades out again using same fade mechanism
-- **Fade Duration:** ~1 second fade out (4-5 color steps)
-- **Fade Method:** Color brightness reduction (TUI doesn't support true opacity)
-- **Layout Impact:** None - window stays fixed, legend fades independently
-- **Rationale:** Paused state is interactive, so showing controls provides helpful context
+**Paused State:**
+```
+[r]esume  [s]top
+```
 
-**Rationale for Fading:**
-- **Initial Guidance:** Shows controls when user first sees timer
-- **Reduces Clutter:** Fades away to keep UI minimal and focused
-- **User Memory:** After seeing once, users remember controls
-- **Clean Interface:** Timer display becomes cleaner after initial period
-- **Overlay Architecture:** Separate from main window, allows independent fade behavior
+**Confirmation State:**
+```
+Stop timer and exit? [y]es / [n]o
+```
 
-**Rationale for Minimal Display:**
-- **Only show `q` for stop:** `s` and `q` are aliases (same action), showing both is redundant
-- **Don't show Ctrl+C:** Universal terminal convention, users already know it works
-- **Minimal UI principle:** Show only what's necessary, reduce visual clutter
-- **Both `s` and `q` still work:** Just not displayed (users can use either)
-- **Ctrl+C still works:** Universal terminal convention, doesn't need to be shown
+**State-Based Content:**
+- **Running State:** Shows `[p]ause  [s]top`
+- **Paused State:** Shows `[r]esume  [s]top`
+- **Confirmation State:** Shows `Stop timer and exit? [y]es / [n]o` (timer paused automatically)
+- **Completed State:** Not shown (exits immediately)
 
-**Completed State:**
-- Legend not shown (exits immediately)
-
-**Legend Updates:**
-- **Timer Start:** Legend appears when timer starts (overlay below window)
-- **Running State:** Legend fades after 3-5 seconds, stays hidden
-- **Pause Action:** Legend reappears immediately when paused (becomes visible)
-- **Paused State:** Legend always visible (does not fade while paused)
-- **Resume Action:** Legend remains visible, then fades after 3-5 seconds
-- **Content Updates:** Legend text changes immediately on state transition (`p` vs `r`)
-- **Stop Action:** `q` remains constant (available in both states)
+**Content Updates:**
+- **Timer Start:** Shows `[p]ause  [s]top` when timer starts
+- **Pause Action:** Content changes immediately to `[r]esume  [s]top`
+- **Resume Action:** Content changes immediately to `[p]ause  [s]top`
+- **Stop Action (`q` or `s`):** Content changes to confirmation prompt, timer paused automatically
+- **Confirmation Cancel:** Content changes back to state-appropriate actions, timer resumes if was running
+- **Confirmation Confirm:** Exits immediately
 
 **Rationale:**
-- **Initial Guidance:** Shows controls when timer starts, provides orientation
-- **Fades Away:** Reduces visual clutter after initial period
-- **Minimal UI:** Show only essential, state-specific controls
-- **Reduce redundancy:** Don't show aliases (`s` works but not displayed)
-- **Universal conventions:** Don't show Ctrl+C (users already know it)
-- **Focus on workflow:** Display only what changes with state (`p`/`r`) plus constant stop (`q`)
-- **Less is more:** Fewer displayed controls = cleaner, less cluttered interface
-- **Overlay Architecture:** Separate component allows fade without affecting main window
+- **Always Visible:** No hidden controls, users always see available actions
+- **Simpler:** No fade timing complexity
+- **Inline Confirmation:** Confirmation happens within same component, no overlay needed
+- **State-Based:** Content changes immediately to reflect available actions
+- **Clear Guidance:** Users always know what actions are available
 
-**Source:** [UXDR: Keyboard Controls Design](../uxdr/keyboard-controls-design.md#41-control-legend-display), [Component: Control Legend](components.md#component-6-control-legend)
+**Source:** [Component: Action Selection](components.md#component-6-action-selection)
 
 ---
 
@@ -284,17 +256,22 @@ This document specifies all keyboard controls, focus management, input handling,
 - No fade or animation
 - Instant feedback
 
-**Control Legend Updates:**
-- **Running State:** Fades after 3-5 seconds, stays hidden
-- **Pause Action:** Reappears immediately when paused (becomes visible)
-- **Paused State:** Always visible, does not fade
-- **Resume Action:** Remains visible, then fades after 3-5 seconds
+**Action Selection Updates:**
+- **Running State:** Always visible, shows `[p]ause  [s]top`
+- **Pause Action:** Content changes immediately to `[r]esume  [s]top`
+- **Paused State:** Always visible, shows `[r]esume  [s]top`
+- **Resume Action:** Content changes immediately to `[p]ause  [s]top`
+- **Stop Action:** Content changes immediately to confirmation prompt
+- **Confirmation Cancel:** Content changes back to state-appropriate actions
 - Text changes synchronously on state transition
 - Instant feedback on state changes
 
 **Completion Message:**
-- Appears immediately on completion
-- Displays for ~500ms
+- Appears immediately on completion: "Session saved! Closing in 3."
+- Countdown updates every 1 second:
+  - After 1 second: "Session saved! Closing in 2."
+  - After 2 seconds: "Session saved! Closing in 1."
+- Displays for ~3 seconds total
 - Then exits automatically
 - No user interaction needed
 
@@ -335,8 +312,8 @@ This document specifies all keyboard controls, focus management, input handling,
 - No error messages for invalid keys
 
 **Examples:**
-- Running state: Shows `[p] pause`
-- Paused state: Shows `[r] resume` (not `[p] pause`)
+- Running state: Shows `[p]ause`
+- Paused state: Shows `[r]esume` (not `[p]ause`)
 - Invalid `p` in paused state: Silently ignored
 
 **Rationale:**
@@ -383,7 +360,7 @@ This document specifies all keyboard controls, focus management, input handling,
    - Status: "⏸ PAUSED" (yellow)
    - Progress bar: Frozen
    - Time display: Frozen
-   - Control legend: Reappears immediately, shows `[r] resume [q] quit` (always visible when paused)
+   - Action Selection: Updates to `[r]esume  [s]top`
 
 **Source:** [US-1.3](../requirements/base.md#us-13), [FR-TIMER-002](../requirements/base.md#fr-timer-002)
 
@@ -405,7 +382,7 @@ This document specifies all keyboard controls, focus management, input handling,
    - Status: "RUNNING" (green)
    - Progress bar: Continues
    - Time display: Resumes countdown
-   - Control legend: Updates to `[p] pause [q] quit`, remains visible for 3-5 seconds, then fades
+   - Action Selection: Updates to `[p]ause  [s]top`
 
 **Source:** [US-1.3](../requirements/base.md#us-13), [FR-TIMER-002](../requirements/base.md#fr-timer-002)
 
@@ -417,12 +394,12 @@ This document specifies all keyboard controls, focus management, input handling,
 
 **Available In:** Running, Paused states
 
-**Display:** Only `q` shown in legend (minimal UI), `s` works as alias but not displayed
+**Display:** `q` shown in action selection, `s` works as alias
 
 **Behavior:**
 1. User presses `q` or `s` (both work identically)
 2. **Timer is automatically paused** (if running, timer pauses; if already paused, stays paused)
-3. **Confirmation dialog appears:** "Stop timer and exit? [y]es / [n]o" (overlays entire main window)
+3. **Action Selection content changes:** "Stop timer and exit? [y]es / [n]o" (inline confirmation)
 4. **User confirms or cancels:**
    - **Confirm (`y` or `Y`):**
      - Timer state changes to "stopped"
@@ -431,17 +408,17 @@ This document specifies all keyboard controls, focus management, input handling,
      - TUI exits immediately
      - User returns to command line
    - **Cancel (`n`, `N`, or `Esc`):**
-     - Confirmation dialog dismissed
-     - Timer resumes (unpauses and continues from where it was)
-     - Timer returns to "running" state
+     - Action Selection content changes back to state-appropriate actions
+     - Timer resumes (unpauses and continues from where it was) if it was running
+     - Timer returns to previous state (running or paused)
      - User continues with timer
 
-**Confirmation Dialog:**
+**Confirmation (Inline):**
 - **Question:** "Stop timer and exit? [y]es / [n]o"
-- **Position:** Centered overlay over entire main window (takes over whole timer)
-- **Modal:** Blocks other input until confirmed or cancelled
-- **Timer Behavior:** Timer automatically paused when dialog appears
-- **Keys:** `y`/`Y` to confirm, `n`/`N`/`Esc` to cancel (resumes timer)
+- **Position:** Inside main window, within Action Selection component
+- **No Overlay:** Confirmation happens inline, no modal overlay
+- **Timer Behavior:** Timer automatically paused when confirmation appears
+- **Keys:** `y`/`Y` to confirm, `n`/`N`/`Esc` to cancel (resumes timer if was running)
 - **Other Keys:** Ignored (wait for y/n)
 
 **Rationale for Confirmation:**
@@ -521,4 +498,4 @@ This document specifies all keyboard controls, focus management, input handling,
 
 ---
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-28

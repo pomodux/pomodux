@@ -13,14 +13,14 @@ This document provides detailed specifications for all UI components in the Pomo
 
 ## Component Inventory
 
-**Total Components:** 8
+**Total Components:** 7
 
 1. **Window/Border** - Visual containment
 2. **Session Header** - Session type and label display
 3. **Progress Bar** - Visual progress representation
 4. **Time Display** - Remaining time (MM:SS)
 5. **Status Indicator** - Current timer state
-6. **Control Legend** - Available keyboard controls
+6. **Action Selection** - Available actions based on timer state (inline)
 7. **Completion Message** - Completion confirmation (brief)
 8. **Terminal Size Warning** - Terminal too small warning
 
@@ -248,118 +248,107 @@ This document provides detailed specifications for all UI components in the Pomo
 
 ---
 
-### Component 6: Control Legend (Overlay)
+### Component 6: Action Selection
 
-**Purpose:** Display available keyboard controls initially, then fade away
+**Purpose:** Display available actions based on timer state, including inline confirmation
 
-**Component Type:** Overlay (not part of main window content)
+**Component Type:** Inline (part of main window content)
 
 **Properties:**
-- **Format:** Minimal, state-specific controls
-- **Position:** Below main window, centered
-- **Display Duration:** Visible for 3-5 seconds after timer start, then fades
-- **Fade Behavior:** Fades out after initial display period
+- **Format:** State-specific action prompts
+- **Position:** Below status indicator, inside main window
 - **Text Style:** Muted color, regular weight
-
-**Action Classification:**
-- **Displayed Actions:** Only essential, state-specific controls shown
-- **Hidden but Available:** Aliases (`s` for stop) and universal conventions (Ctrl+C) work but not displayed
-
-**States:**
-- **Visible:** Fully opaque, displayed below window
-- **Fading:** Gradually reducing opacity (fade out over ~1 second)
-- **Hidden:** Not displayed (faded away)
+- **Always Visible:** No fading, always displayed
 
 **Display States (Content):**
-- **Running:** "[p] pause [q] quit" (fades after 3-5 seconds)
-- **Paused:** "[r] resume [q] quit" (always visible when paused)
-- **Confirmation:** Not shown (confirmation dialog displayed instead)
+- **Running:** "[p]ause  [s]top"
+- **Paused:** "[r]esume  [s]top"
+- **Confirmation:** "Stop timer and exit? [y]es / [n]o" (inline, timer paused)
 - **Completed:** Not shown (exits immediately)
 
 **State Transitions:**
-- Timer Start → Visible: Legend appears below window
-- Visible → Fading: After 3-5 seconds (running state), begins fade
-- Fading → Hidden: After fade completes (~1 second), hidden
-- Running → Paused: Legend reappears (becomes visible again) with updated content
-- Paused → Running: Legend fades again after 3-5 seconds
-- Running/Paused → Confirmation: Legend hidden (confirmation dialog shown instead)
-- Confirmation → Running/Paused: Legend reappears (if was visible before)
+- Timer Start → Running: Shows "[p]ause  [s]top"
+- Running → Paused: Content changes to "[r]esume  [s]top"
+- Paused → Running: Content changes to "[p]ause  [s]top"
+- Running/Paused → Confirmation: Content changes to "Stop timer and exit? [y]es / [n]o" (timer paused automatically)
+- Confirmation → Running/Paused: Content changes back to state-appropriate actions (timer resumes if was running)
 - Any → Completed: Not shown (exits immediately)
 
-**Fade Timing:**
-- **Initial Display (Running):** 3-5 seconds after timer starts
-- **Fade Duration:** ~1 second fade out
-- **Paused State:** Legend always visible (reappears immediately when paused)
-- **Resume Display (Running):** Legend visible for 3-5 seconds after resume, then fades
-
 **Keyboard Interactions:**
-- None (display only, shows available controls)
-- Fade not interrupted by keypresses (fades regardless in running state)
-- Pause action (`p`): Causes legend to reappear immediately
-- Resume action (`r`): Legend remains visible, then fades after 3-5 seconds
+- **Running State:**
+  - `p`: Pause timer (transitions to paused state)
+  - `q` or `s`: Enter confirmation state (timer paused automatically)
+- **Paused State:**
+  - `r`: Resume timer (transitions to running state)
+  - `q` or `s`: Enter confirmation state
+- **Confirmation State:**
+  - `y` or `Y`: Confirm stop, exit application
+  - `n`, `N`, or `Esc`: Cancel, return to previous state (timer resumes if was running)
+  - Other keys: Ignored (wait for y/n)
 
 **Theme Integration:**
 - Uses `theme.Colors.TextMuted` for text color
-- Fade implementation: Color-based dimming (TUI doesn't support true opacity)
-- Single line, minimal display
+- Confirmation text may use `theme.Colors.Warning` for question
+- Keys highlighted in brackets: `[p]`, `[q]`, `[y]es`, `[n]o`
 
 **Implementation Notes:**
-- **Overlay Component:** Rendered separately from main window, positioned below
-- **Position:** Centered horizontally, positioned below main window border (Option 1: Below Window, Centered)
-- **Layout Impact:** None - window stays fixed, legend fades independently
-- Format: `fmt.Sprintf("[%s] %s [%s] %s", key1, action1, key2, action2)`
-- Running state: `"[p] pause [q] quit"`
-- Paused state: `"[r] resume [q] quit"` (if still visible)
-
-**Fade Implementation (TUI Color-Based):**
-- **Approach:** Color brightness reduction (terminals don't support true opacity)
-- **Fade Steps:** 4-5 color transitions over ~1 second
-- **Update Frequency:** Every ~200-250ms (4-5 steps)
-- **Color Progression:**
-  1. Start: `theme.Colors.TextMuted` (100% brightness)
-  2. Step 1: Dimmed version (~70% brightness)
-  3. Step 2: Very dim (~40% brightness)
-  4. Step 3: Barely visible (~10% brightness)
-  5. End: Stop rendering (invisible)
-- **Implementation:** Use progressively dimmer color variants or reduce color intensity
-- **Advantage:** No layout changes, smooth visual transition, independent fade behavior
-- **Not displayed but still work:**
-  - `s` key: Alias for stop, works but not shown (only `q` displayed)
-  - `Ctrl+C`: Universal terminal convention, works but not shown
-- **Positioning:** Centered below main window, not inside window border
+- **Inline Component:** Rendered inside main window, below status indicator
+- **Position:** Inside window border, below status indicator
+- **No Fade:** Always visible, no fade behavior
+- **State-Based Content:** Content changes immediately on state transitions
+- **Confirmation Behavior:** 
+  - When user presses `q` or `s`, timer is automatically paused
+  - Action selection content changes to confirmation prompt
+  - User confirms or cancels within the same component
+  - On cancel, timer resumes if it was running before confirmation
+- Format examples:
+  - Running: `"[p]ause  [s]top"`
+  - Paused: `"[r]esume  [s]top"`
+  - Confirmation: `"Stop timer and exit? [y]es / [n]o"`
 - **Rationale:** 
-  - Fades away during running state to reduce visual clutter
-  - Reappears when paused to provide contextual help (controls change)
-  - Paused state is interactive, so showing controls is helpful
-  - Keeps UI minimal during active countdown, shows controls when user needs them
+  - Simpler than overlay approach
+  - Always visible, no hidden controls
+  - Inline confirmation reduces visual complexity
+  - No fade timing complexity
 
 **Requirements References:**
 - [Section 8.2 Keyboard Controls](../requirements/base.md#keyboard-controls)
-- [UXDR: Keyboard Controls Design](../uxdr/keyboard-controls-design.md)
+- [US-1.3](../requirements/base.md#us-13) - Pause and Resume Timer
+- [US-1.4](../requirements/base.md#us-14) - Stop Timer Early
+- [FR-TIMER-002](../requirements/base.md#fr-timer-002) - Timer Pause/Resume
+- [FR-TIMER-003](../requirements/base.md#fr-timer-003) - Timer Stop
 
-**Wireframe Usage:** Running, Paused states (not Completed)
+**Wireframe Usage:** Running, Paused, Confirmation states (not Completed)
 
 ---
 
 ### Component 7: Completion Message
 
-**Purpose:** Show completion confirmation
+**Purpose:** Show completion confirmation with countdown
 
 **Properties:**
-- **Text:** "Session saved!"
+- **Text:** "Session saved! Closing in 3. 2. 1."
 - **Position:** Below status indicator
-- **Display Duration:** ~500ms before exit
+- **Display Duration:** ~3 seconds (countdown from 3 to 1)
 - **Text Style:** Success color, regular weight
+- **Countdown:** Updates every second (3 → 2 → 1)
 
 **States:**
-- **Completed:** Visible briefly (~500ms), then exit
+- **Completed:** Visible with countdown (~3 seconds), then exit
+- **Countdown States:**
+  - Initial: "Session saved! Closing in 3."
+  - After 1 second: "Session saved! Closing in 2."
+  - After 2 seconds: "Session saved! Closing in 1."
+  - After 3 seconds: Exit
 
 **State Transitions:**
-- Running → Completed: Message appears
-- Completed → Exit: Message disappears after ~500ms
+- Running → Completed: Message appears with "Closing in 3."
+- After 1 second: Updates to "Closing in 2."
+- After 2 seconds: Updates to "Closing in 1."
+- After 3 seconds: Exit
 
 **Keyboard Interactions:**
-- None (display only, brief)
+- None (display only, countdown proceeds automatically)
 
 **Theme Integration:**
 - Uses `theme.Colors.Success` for text color
@@ -367,7 +356,9 @@ This document provides detailed specifications for all UI components in the Pomo
 
 **Implementation Notes:**
 - Display after timer completes
-- Show for ~500ms (2 tick cycles at 250ms)
+- Show countdown: "Session saved! Closing in 3." → "Closing in 2." → "Closing in 1."
+- Update every 1 second (4 tick cycles at 250ms per second)
+- Total display duration: ~3 seconds
 - Then exit TUI
 
 **Requirements References:**
@@ -415,56 +406,6 @@ This document provides detailed specifications for all UI components in the Pomo
 
 ---
 
-### Component 9: Confirmation Dialog
-
-**Purpose:** Confirm user intent before stopping timer
-
-**Component Type:** Overlay (modal dialog)
-
-**Properties:**
-- **Format:** Question with yes/no options
-- **Position:** Centered over main window (overlay)
-- **Display Condition:** User presses `q` or `s` to stop timer
-- **Text Style:** Warning/question color, regular weight
-
-**Content:**
-- **Question:** "Stop timer and exit? [y]es / [n]o"
-- **Format:** Brief, clear question with keyboard shortcuts
-
-**States:**
-- **Visible:** Displayed when user requests stop
-- **Hidden:** Not displayed (normal state)
-
-**State Transitions:**
-- Running/Paused → Confirmation: User presses `q` or `s` (timer paused automatically)
-- Confirmation → Running: User presses `n` (cancel, timer resumes)
-- Confirmation → Stopped: User presses `y` (confirm)
-
-**Keyboard Interactions:**
-- `y` or `Y`: Confirm stop, exit application
-- `n` or `N`: Cancel, resume timer (timer unpauses and continues)
-- `Esc`: Cancel (same as `n`, resume timer)
-- Other keys: Ignored (wait for y/n)
-
-**Theme Integration:**
-- Uses `theme.Colors.Warning` or `theme.Colors.Text` for question text
-- Keys highlighted: `[y]es` and `[n]o` in brackets
-- Centered overlay, semi-transparent or dimmed background (if supported)
-
-**Implementation Notes:**
-- **Overlay Component:** Rendered on top of main window (takes over whole timer)
-- Format: `"Stop timer and exit? [y]es / [n]o"`
-- Position: Centered horizontally and vertically, overlays entire main window
-- **Modal Behavior:** Blocks other input until confirmed or cancelled
-- **Timer Behavior:** Timer is automatically paused when confirmation appears
-- **Cancel Behavior:** Timer resumes (unpauses) when user cancels with `n` or `Esc`
-- **Rationale:** Prevents accidental stops, gives user chance to reconsider, timer paused during decision
-
-**Requirements References:**
-- [US-1.4](../requirements/base.md#us-14) - Stop Timer Early
-- [FR-TIMER-003](../requirements/base.md#fr-timer-003) - Timer Stop
-
-**Wireframe Usage:** Confirmation state (overlay on Running/Paused)
 
 ---
 
@@ -479,20 +420,15 @@ Window/Border (container)
 ├── Progress Bar
 ├── Time Display
 ├── Status Indicator
+├── Action Selection (always visible, state-based content)
 └── Completion Message (conditional)
 ```
 
-**Overlay Components (Transient):**
-```
-Control Legend (overlay, fades after 3-5s)
-Confirmation Dialog (overlay, appears on stop request)
-```
-
 **Architecture:**
-- Main window components are persistent (always visible)
-- Overlay components are transient (appear, then fade)
-- Control legend is separate overlay, positioned below main window
-- Overlay architecture allows independent fade behavior
+- All components are inline (part of main window)
+- No overlay components
+- Action Selection changes content based on timer state
+- Confirmation handled inline within Action Selection component
 
 ### Component Dependencies
 
@@ -508,9 +444,9 @@ Confirmation Dialog (overlay, appears on stop request)
 - Depends on: Timer state (for status text/color)
 - Affects: State communication
 
-**Control Legend:**
-- Depends on: Timer state (for available controls)
-- Affects: User guidance
+**Action Selection:**
+- Depends on: Timer state (for available actions)
+- Affects: User guidance and confirmation
 
 **Completion Message:**
 - Depends on: Timer state (completed)
@@ -519,23 +455,23 @@ Confirmation Dialog (overlay, appears on stop request)
 ### Component Composition Patterns
 
 **Running State:**
-- **Main Window:** Window + Session Header + Progress Bar + Time Display + Status Indicator
-- **Overlay:** Control Legend (visible initially, fades after 3-5s)
+- **Main Window:** Window + Session Header + Progress Bar + Time Display + Status Indicator + Action Selection (`[p]ause  [s]top`)
 
 **Paused State:**
-- **Main Window:** Window + Session Header + Progress Bar (frozen) + Time Display (frozen) + Status Indicator
-- **Overlay:** Control Legend (always visible when paused, shows `[r] resume [q] quit`)
+- **Main Window:** Window + Session Header + Progress Bar (frozen) + Time Display (frozen) + Status Indicator + Action Selection (`[r]esume  [s]top`)
+
+**Confirmation State:**
+- **Main Window:** Window + Session Header + Progress Bar (frozen) + Time Display (frozen) + Status Indicator (paused) + Action Selection (`Stop timer and exit? [y]es / [n]o`)
 
 **Completed State:**
 - **Main Window:** Window + Session Header + Progress Bar (100%) + Time Display (0:00) + Status Indicator + Completion Message
-- **Overlay:** Control Legend (not shown, already faded)
+- **Action Selection:** Not shown (exits immediately)
 
 **Error State (Terminal Too Small):**
 - Terminal Size Warning (centered)
 
 **Error State (Config Errors):**
-- **Main Window:** Window + Config Error Banner + Session Header + Progress Bar + Time Display + Status Indicator
-- **Overlay:** Control Legend (if still visible; typically already faded)
+- **Main Window:** Window + Config Error Banner + Session Header + Progress Bar + Time Display + Status Indicator + Action Selection
 
 ---
 
@@ -564,4 +500,4 @@ Confirmation Dialog (overlay, appears on stop request)
 
 ---
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-28

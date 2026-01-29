@@ -136,7 +136,7 @@ This document defines all user journeys, task flows, screen flows, and error/edg
    - Status changes to "⏸ PAUSED" (yellow)
    - Progress bar freezes
    - Time display freezes at 15:23
-   - Control legend updates (shows `[r] resume`)
+   - Action Selection updates (shows `[r]esume  [s]top`)
 5. User presses `r` key
 6. Application resumes timer:
    - `totalPaused` updated with pause duration
@@ -147,7 +147,7 @@ This document defines all user journeys, task flows, screen flows, and error/edg
    - Status changes to "RUNNING" (green)
    - Progress bar continues
    - Time display resumes countdown
-   - Control legend updates (shows `[p] pause`)
+   - Action Selection updates (shows `[p]ause  [s]top`)
 
 **Preconditions:**
 - Timer is running (for pause)
@@ -176,9 +176,9 @@ This document defines all user journeys, task flows, screen flows, and error/edg
 
 **Steps:**
 1. Timer is running or paused (e.g., 10:15 remaining)
-2. User presses `q` key (or `s` alias - both work, but only `q` displayed)
+2. User presses `q` key (or `s` alias - both work)
 3. **Timer is automatically paused** (if running, timer pauses; if paused, stays paused)
-4. **Confirmation dialog appears:** "Stop timer and exit? [y]es / [n]o" (overlays entire main window)
+4. **Action Selection content changes:** "Stop timer and exit? [y]es / [n]o" (inline confirmation)
 5. **User confirms or cancels:**
    - **Confirm (`y` or `Y`):**
      - Timer state changes to "stopped"
@@ -188,9 +188,9 @@ This document defines all user journeys, task flows, screen flows, and error/edg
      - TUI exits immediately
      - User returns to command line
    - **Cancel (`n`, `N`, or `Esc`):**
-     - Confirmation dialog dismissed
-     - Timer resumes (unpauses and continues running from where it was)
-     - Timer returns to "running" state
+     - Action Selection content changes back to state-appropriate actions
+     - Timer resumes (unpauses and continues running from where it was) if it was running
+     - Timer returns to previous state (running or paused)
      - User continues with timer
 
 **Preconditions:**
@@ -202,10 +202,11 @@ This document defines all user journeys, task flows, screen flows, and error/edg
 - Application exited
 
 **Note:** 
-- Confirmation dialog prevents accidental stops
+- Inline confirmation prevents accidental stops
 - User must explicitly confirm to stop timer
 - Cancel returns to timer without changes
 - No completion screen shown for stopped timer (immediate exit after confirmation)
+- Confirmation happens within Action Selection component (no overlay)
 
 **Requirements References:**
 - [US-1.4](../requirements/base.md#us-14) - Stop Timer Early
@@ -231,8 +232,11 @@ This document defines all user journeys, task flows, screen flows, and error/edg
    - Progress bar: 100% filled
    - Time: "0:00"
    - Status: "✓ COMPLETED" (green)
-   - Message: "Session saved!"
-5. TUI exits after ~500ms
+   - Message: "Session saved! Closing in 3." (countdown begins)
+5. Countdown proceeds:
+   - After 1 second: Message updates to "Session saved! Closing in 2."
+   - After 2 seconds: Message updates to "Session saved! Closing in 1."
+   - After 3 seconds: TUI exits
 6. User returns to command line
 
 **Preconditions:**
@@ -596,4 +600,4 @@ flowchart TD
 
 ---
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-28

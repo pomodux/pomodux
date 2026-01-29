@@ -21,9 +21,9 @@ This document provides complete screen wireframes for all states of the Pomodux 
 - Responsive to terminal size
 
 **Component Architecture:**
-- **Main Window:** Persistent components (border, header, progress, time, status)
-- **Overlays:** Transient components (control legend) that fade after initial display
-- **Separation:** Overlays rendered separately, positioned below main window
+- **Main Window:** All components inline (border, header, progress, time, status, action selection)
+- **No Overlays:** All components are part of main window content
+- **Action Selection:** Always visible, changes content based on timer state
 
 **Minimum Dimensions:**
 - 80 columns minimum
@@ -37,24 +37,14 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Source:** [Requirements Section 8.1](../requirements/base.md#screen-layouts)
 
-### Overlay Architecture
+### Action Selection Architecture
 
-**Control Legend Overlay (Option 1: Below Window, Centered):**
-- **Position:** Below main window border, centered horizontally
-- **Initial Display:** Appears when timer starts
-- **Fade Timing:** Visible 3-5 seconds, then fades over ~1 second
-- **Fade Method:** Color-based dimming (4-5 steps, ~200-250ms per step)
-- **Behavior:** Independent of main window, fades without affecting window content
-- **Layout Impact:** None - window stays fixed, legend fades independently
-- **Rationale:** Provides initial guidance, then fades to reduce clutter
-
-**Benefits:**
-- **No Layout Impact:** Window dimensions stay fixed during fade
-- **Smooth Fade:** Color-based dimming provides smooth visual transition
-- **Cleaner Main Window:** No persistent legend cluttering the interface
-- **Initial Guidance:** Shows controls when users need them most
-- **Minimal UI:** After fade, interface is clean and focused
-- **Independent Behavior:** Overlay fades without affecting other components
+**Inline Action Selection:**
+- **Position:** Inside main window, below status indicator
+- **Always Visible:** No fading, always displayed
+- **State-Based Content:** Content changes based on timer state
+- **Confirmation Inline:** Confirmation prompt appears within action selection component
+- **Rationale:** Simpler than overlay approach, always visible, no fade complexity
 
 ---
 
@@ -65,8 +55,6 @@ This document provides complete screen wireframes for all states of the Pomodux 
 **Purpose:** Display active timer counting down
 
 **Wireframe:**
-
-**Initial State (Control Legend Visible):**
 ```
 ┌─ Pomodux Timer ─────────────────────────────────────────────┐
 │                                                              │
@@ -76,26 +64,9 @@ This document provides complete screen wireframes for all states of the Pomodux 
 │                                                              │
 │  Status: RUNNING                                             │ ← Status Indicator
 │                                                              │
-└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-                                                              │
-                                                              │
-         [p] pause  [q] quit                                  ← Overlay: Control Legend (fades after 3-5s)
-```
-
-**After Fade (Control Legend Hidden):**
-```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
-│                                                              │
-│  Work Session: Implementing authentication                   │ ← Session Header
-│                                                              │
-│  ████████████████████████░░░░░░░░░░░░░  60%   15:23          │ ← Progress Bar + Time
-│                                                              │
-│  Status: RUNNING                                             │ ← Status Indicator
+│  [p]ause  [s]top                                             │ ← Action Selection (always visible)
 │                                                              │
 └──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-                                                              │
-                                                              │
-                                                              ← Overlay: Control Legend (faded, not displayed)
 ```
 
 **Component Composition:**
@@ -106,9 +77,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 3. **Progress Bar** - 60% filled, shows percentage, theme colors
 4. **Time Display** - "15:23" (MM:SS format)
 5. **Status Indicator** - "RUNNING" (green/success color)
-
-**Overlay (Transient):**
-6. **Control Legend** - Minimal display: `[p] pause [q] quit` - appears below window, fades after 3-5 seconds
+6. **Action Selection** - `[p]ause  [s]top` (always visible, no fade)
 
 **Entry Conditions:**
 - Timer started successfully
@@ -140,8 +109,6 @@ This document provides complete screen wireframes for all states of the Pomodux 
 **Purpose:** Display paused timer
 
 **Wireframe:**
-
-**Paused State (Legend Always Visible):**
 ```
 ┌─ Pomodux Timer ─────────────────────────────────────────────┐
 │                                                              │
@@ -151,10 +118,9 @@ This document provides complete screen wireframes for all states of the Pomodux 
 │                                                              │
 │  Status: ⏸ PAUSED                                            │ ← Status Indicator
 │                                                              │
+│  [r]esume  [s]top                                            │ ← Action Selection (always visible)
+│                                                              │
 └──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-                                                              │
-                                                              │
-         [r] resume  [q] quit                                 ← Overlay: Control Legend (always visible when paused)
 ```
 
 **Component Composition:**
@@ -165,15 +131,13 @@ This document provides complete screen wireframes for all states of the Pomodux 
 3. **Progress Bar** - Frozen at 60% (no updates)
 4. **Time Display** - Frozen at "15:23" (no countdown)
 5. **Status Indicator** - "⏸ PAUSED" (yellow/warning color)
-
-**Overlay (Transient):**
-6. **Control Legend** - Always visible when paused, shows `[r] resume [q] quit`
+6. **Action Selection** - `[r]esume  [s]top` (always visible)
 
 **Changes from Running:**
 - Status: "⏸ PAUSED" (yellow) instead of "RUNNING" (green)
 - Progress bar: No animation (frozen)
 - Time display: No countdown (frozen)
-- Control legend: Reappears immediately, shows `[r] resume` instead of `[p] pause` (always visible when paused)
+- Action Selection: Content changes to `[r]esume  [s]top`
 
 **Entry Conditions:**
 - Timer is running
@@ -201,6 +165,8 @@ This document provides complete screen wireframes for all states of the Pomodux 
 **Purpose:** Display completion confirmation (brief)
 
 **Wireframe:**
+
+**Initial (Closing in 3):**
 ```
 ┌─ Pomodux Timer ─────────────────────────────────────────────┐
 │                                                              │
@@ -210,12 +176,39 @@ This document provides complete screen wireframes for all states of the Pomodux 
 │                                                              │
 │  Status: ✓ COMPLETED                                         │ ← Status Indicator
 │                                                              │
-│  Session saved!                                              │ ← Completion Message
+│  Session saved! Closing in 3.                                │ ← Completion Message (countdown: 3)
 │                                                              │
 └──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-                                                              │
-                                                              │
-                                                              ← Overlay: Control Legend (not shown, already faded)
+```
+
+**After 1 second (Closing in 2):**
+```
+┌─ Pomodux Timer ─────────────────────────────────────────────┐
+│                                                              │
+│  Work Session: Implementing authentication                   │ ← Session Header
+│                                                              │
+│  ███████████████████████████████████████████████  100%  0:00 │ ← Progress Bar (100%) + Time (0:00)
+│                                                              │
+│  Status: ✓ COMPLETED                                         │ ← Status Indicator
+│                                                              │
+│  Session saved! Closing in 2.                                │ ← Completion Message (countdown: 2)
+│                                                              │
+└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
+```
+
+**After 2 seconds (Closing in 1):**
+```
+┌─ Pomodux Timer ─────────────────────────────────────────────┐
+│                                                              │
+│  Work Session: Implementing authentication                   │ ← Session Header
+│                                                              │
+│  ███████████████████████████████████████████████  100%  0:00 │ ← Progress Bar (100%) + Time (0:00)
+│                                                              │
+│  Status: ✓ COMPLETED                                         │ ← Status Indicator
+│                                                              │
+│  Session saved! Closing in 1.                                │ ← Completion Message (countdown: 1)
+│                                                              │
+└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
 ```
 
 **Component Composition:**
@@ -226,17 +219,14 @@ This document provides complete screen wireframes for all states of the Pomodux 
 3. **Progress Bar** - 100% filled, static
 4. **Time Display** - "0:00"
 5. **Status Indicator** - "✓ COMPLETED" (green/success color)
-6. **Completion Message** - "Session saved!" (green/success color)
-
-**Overlay (Transient):**
-7. **Control Legend** - Not shown (exits immediately, legend already faded)
+6. **Completion Message** - "Session saved! Closing in 3." (countdown: 3 → 2 → 1)
 
 **Changes from Running:**
 - Progress bar: 100% filled
 - Time: "0:00"
 - Status: "✓ COMPLETED" (green)
-- Message: "Session saved!" appears
-- Controls: Not shown (exits after ~500ms)
+- Message: "Session saved! Closing in 3." appears, counts down to 1
+- Action Selection: Not shown (exits after countdown)
 
 **Entry Conditions:**
 - Timer is running
@@ -244,11 +234,12 @@ This document provides complete screen wireframes for all states of the Pomodux 
 - Timer state changes to "completed"
 
 **Exit Conditions:**
-- After ~500ms display → Exit automatically
+- After countdown completes (~3 seconds) → Exit automatically
 - No user interaction needed
 
 **Display Duration:**
-- ~500ms (2 tick cycles at 250ms)
+- ~3 seconds total
+- Countdown updates every 1 second: "Closing in 3." → "Closing in 2." → "Closing in 1."
 - Then automatic exit
 
 **Requirements References:**
@@ -262,44 +253,32 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 ### State 4: Confirmation
 
-**Purpose:** Confirm user intent before stopping timer
+**Purpose:** Confirm user intent before stopping timer (inline confirmation)
 
 **Wireframe:**
-
-**Confirmation Overlay (takes over entire timer):**
 ```
 ┌─ Pomodux Timer ─────────────────────────────────────────────┐
 │                                                              │
-│  Work Session: Implementing authentication                   │ ← Session Header (dimmed/background)
+│  Work Session: Implementing authentication                   │ ← Session Header
 │                                                              │
-│  ████████████████████████░░░░░░░░░░░░░  60%   15:23          │ ← Progress Bar + Time (frozen, dimmed)
+│  ████████████████████████░░░░░░░░░░░░░  60%   15:23          │ ← Progress Bar (frozen) + Time (frozen)
 │                                                              │
 │  Status: ⏸ PAUSED                                            │ ← Status Indicator (paused automatically)
 │                                                              │
+│  Stop timer and exit? [y]es / [n]o                           │ ← Action Selection (confirmation prompt)
 │                                                              │
-│                    ┌─────────────────────────────┐           │
-│                    │ Stop timer and exit?        │           │ ← Confirmation Dialog
-│                    │ [y]es / [n]o               │           │   (Overlays entire window)
-│                    └─────────────────────────────┘           │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window, dimmed)
+└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
 ```
 
 **Component Composition:**
 
-**Main Window (Dimmed/Background):**
-- Timer is automatically paused when confirmation appears
-- Status shows "⏸ PAUSED" (timer paused automatically)
-- Progress bar and time display frozen
-- All components dimmed/backgrounded (visual indication of modal overlay)
-- Timer does not continue running (paused)
-
-**Overlay (Modal Dialog - Takes Over Entire Timer):**
-- **Confirmation Dialog** - Centered overlay with question
-- **Question:** "Stop timer and exit? [y]es / [n]o"
-- **Position:** Centered horizontally and vertically, overlays entire main window
-- **Modal:** Blocks other input until confirmed or cancelled
-- **Visual:** Main window dimmed/backgrounded, dialog prominent
+**Main Window (Persistent):**
+1. **Window/Border** - Same as Running/Paused
+2. **Session Header** - Same as Running/Paused
+3. **Progress Bar** - Frozen at current progress (no updates)
+4. **Time Display** - Frozen at current time (no countdown)
+5. **Status Indicator** - "⏸ PAUSED" (timer paused automatically)
+6. **Action Selection** - "Stop timer and exit? [y]es / [n]o" (confirmation prompt inline)
 
 **Entry Conditions:**
 - Timer is running or paused
@@ -307,7 +286,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Exit Conditions:**
 - User presses `y` or `Y` → Confirm stop, transition to Stopped, then exit
-- User presses `n`, `N`, or `Esc` → Cancel, timer resumes (unpauses and continues running)
+- User presses `n`, `N`, or `Esc` → Cancel, return to previous state (timer resumes if was running)
 - User presses `Ctrl+C` → Emergency exit (bypasses confirmation)
 
 **Keyboard Controls:**
@@ -318,10 +297,11 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Behavior:**
 - Timer is automatically paused when confirmation appears (if running, pauses; if paused, stays paused)
-- Confirmation dialog is modal (blocks other input, takes over entire timer)
-- Main window remains visible but dimmed/backgrounded (visual indication of modal)
+- Confirmation prompt appears inline within Action Selection component
+- No overlay - confirmation happens within main window
 - Timer does not continue running (paused during confirmation)
-- On cancel (`n`/`Esc`): Timer resumes (unpauses and continues from where it was)
+- On cancel (`n`/`Esc`): Timer resumes (unpauses and continues from where it was) if it was running
+- Action Selection content changes back to state-appropriate actions after cancel
 - User must explicitly confirm or cancel
 
 **Requirements References:**
@@ -382,10 +362,9 @@ This document provides complete screen wireframes for all states of the Pomodux 
 │                                                              │
 │  Status: RUNNING                                             │ ← Status Indicator
 │                                                              │
+│  [p]ause  [s]top                                             │ ← Action Selection (always visible)
+│                                                              │
 └──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-                                                              │
-                                                              │
-         [p] pause  [q] quit                                  ← Overlay: Control Legend (if still visible, fades after 3-5s)
 ```
 
 **Component Composition:**
@@ -397,9 +376,7 @@ This document provides complete screen wireframes for all states of the Pomodux 
 4. **Progress Bar** - Same as Running
 5. **Time Display** - Same as Running
 6. **Status Indicator** - Same as Running
-
-**Overlay (Transient):**
-7. **Control Legend** - If still visible, shows `[p] pause [q] quit` (typically already faded)
+7. **Action Selection** - `[p]ause  [s]top` (always visible)
 
 **Display Conditions:**
 - Config file has validation errors
@@ -522,4 +499,4 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 ---
 
-**Last Updated:** 2026-01-27
+**Last Updated:** 2026-01-28
