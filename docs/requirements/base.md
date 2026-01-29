@@ -586,6 +586,7 @@
 - Offer to resume from last saved state
 - Mark unrecovered sessions as `end_status: "interrupted"`
 - Handle SIGINT (Ctrl+C), SIGTERM (kill), and SIGHUP (terminal close) gracefully
+- On SIGINT, SIGTERM, or SIGHUP: append a session with `end_status: "interrupted"` to history before exit (so the session appears in pomodux-stats)
 - Emit `ApplicationInterrupted` event before cleanup
 - SIGKILL (kill -9) cannot be caught - maximum 5 seconds data loss
 
@@ -1454,6 +1455,8 @@ Every 5s (running):  → Save state (backup) via tea.Tick command
 
 **Proposed Decision:** Option D (configurable, default 90 days)  
 **Rationale:** Flexibility, prevents unbounded growth
+
+**MVP implementation:** Append-only; no automatic compaction or rotation. Compaction/rotation deferred to post-MVP.
 
 ---
 

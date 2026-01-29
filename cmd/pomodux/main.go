@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/pomodux/pomodux/internal/config"
+	"github.com/pomodux/pomodux/internal/history"
 	"github.com/pomodux/pomodux/internal/logger"
 	"github.com/pomodux/pomodux/internal/theme"
 	"github.com/pomodux/pomodux/internal/timer"
@@ -177,7 +178,8 @@ func startTimer(cmd *cobra.Command, args []string) error {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
 	// Start TUI with resolved theme
-	model := tui.NewModel(t, sessionID, statePath, selectedTheme)
+	historyPath := config.HistoryPath()
+	model := tui.NewModel(t, sessionID, statePath, historyPath, selectedTheme)
 	program := tea.NewProgram(model, tea.WithAltScreen())
 
 	// Handle signals in a goroutine (this is the exception - signal handling)
@@ -188,6 +190,29 @@ func startTimer(cmd *cobra.Command, args []string) error {
 		// Save state before exit
 		if err := timer.SaveState(t, sessionID, statePath); err != nil {
 			logger.WithError(err).Error("Failed to save state on interrupt")
+		}
+
+		// Append session with end_status "interrupted" to history
+		endedAt := time.Now()
+		interruptedSession := history.Session{
+			ID:             sessionID,
+			StartedAt:      t.StartTime(),
+			EndedAt:        endedAt,
+			Duration:       timer.FormatDuration(t.Duration()),
+			Preset:         t.Preset(),
+			Label:          t.Label(),
+			EndStatus:      "interrupted",
+			PausedCount:    t.PausedCount(),
+			PausedDuration: timer.FormatDuration(t.TotalPausedDuration()),
+		}
+		h, err := history.Load(historyPath)
+		if err != nil {
+			logger.WithError(err).Error("Failed to load history on interrupt")
+		} else {
+			h.AddSession(interruptedSession)
+			if err := history.Save(h, historyPath); err != nil {
+				logger.WithError(err).Error("Failed to save interrupted session to history")
+			}
 		}
 
 		program.Quit()

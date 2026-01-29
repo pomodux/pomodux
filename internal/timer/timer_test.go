@@ -79,4 +79,25 @@ func TestTimer_Stop(t *testing.T) {
 	assert.Equal(t, StateStopped, timer.State())
 }
 
+func TestFormatDuration(t *testing.T) {
+	tests := []struct {
+		name     string
+		d        time.Duration
+		expected string
+	}{
+		{"zero", 0, "0s"},
+		{"seconds only", 45 * time.Second, "45s"},
+		{"minutes", 25 * time.Minute, "25m"},
+		{"hours and minutes", 90 * time.Minute, "1h30m"},
+		{"hours only", 2 * time.Hour, "2h"},
+		{"mixed", 2*time.Hour + 15*time.Minute, "2h15m"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FormatDuration(tt.d)
+			assert.Equal(t, tt.expected, got)
+		})
+	}
+}
+
 

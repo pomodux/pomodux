@@ -169,4 +169,3 @@ func RedirectToFile(path string) error {
 
 	return nil
 }
-

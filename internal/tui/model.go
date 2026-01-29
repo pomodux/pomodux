@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/pomodux/pomodux/internal/history"
 	"github.com/pomodux/pomodux/internal/logger"
 	"github.com/pomodux/pomodux/internal/theme"
 	"github.com/pomodux/pomodux/internal/timer"
@@ -27,6 +28,7 @@ type Model struct {
 	quitting                     bool
 	sessionID                    string
 	statePath                    string
+	historyPath                  string
 	showConfirmation             bool
 	wasRunningBeforeConfirmation bool
 	showCompletion               bool
@@ -34,7 +36,7 @@ type Model struct {
 }
 
 // NewModel creates a new TUI model. If theme is nil, the default theme is used.
-func NewModel(t *timer.Timer, sessionID string, statePath string, th *theme.Theme) Model {
+func NewModel(t *timer.Timer, sessionID string, statePath string, historyPath string, th *theme.Theme) Model {
 	if th == nil {
 		th = theme.GetTheme("default")
 	}
@@ -55,11 +57,12 @@ func NewModel(t *timer.Timer, sessionID string, statePath string, th *theme.Them
 	prog.EmptyColor = string(th.Colors.ProgressEmpty)
 
 	return Model{
-		timer:     t,
-		progress:  prog,
-		theme:     th,
-		sessionID: sessionID,
-		statePath: statePath,
+		timer:       t,
+		progress:    prog,
+		theme:       th,
+		sessionID:   sessionID,
+		statePath:   statePath,
+		historyPath: historyPath,
 	}
 }
 
@@ -156,6 +159,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}).Info("Stop confirmed by user")
 				m.timer.Stop()
 				m.saveState()
+				m.saveSessionToHistory("stopped")
 				m.quitting = true
 				return m, tea.Quit
 			case "n", "N", "esc":
@@ -259,6 +263,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.timer.Stop()
 			// Save state on interrupt
 			m.saveState()
+			m.saveSessionToHistory("cancelled")
 			m.quitting = true
 			return m, tea.Quit
 		default:
@@ -308,6 +313,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					"event":     "completion_exit",
 					"session_id": m.sessionID,
 				}).Info("Completion countdown finished - exiting")
+				m.saveSessionToHistory("completed")
 				return m, tea.Quit
 			}
 			return m, tea.Tick(1*time.Second, func(t time.Time) tea.Msg {
@@ -352,6 +358,53 @@ func (m Model) saveState() {
 			"timer_state": string(m.timer.State()),
 		}).Debug("Timer state saved")
 	}
+}
+
+// saveSessionToHistory appends the current session to history with the given end_status.
+// Called before tea.Quit on completed, stopped, or cancelled exit paths.
+func (m Model) saveSessionToHistory(endStatus string) {
+	if m.historyPath == "" {
+		logger.WithField("session_id", m.sessionID).Warn("History path not set, skipping session save")
+		return
+	}
+	endedAt := time.Now()
+	session := history.Session{
+		ID:             m.sessionID,
+		StartedAt:      m.timer.StartTime(),
+		EndedAt:        endedAt,
+		Duration:       timer.FormatDuration(m.timer.Duration()),
+		Preset:         m.timer.Preset(),
+		Label:          m.timer.Label(),
+		EndStatus:      endStatus,
+		PausedCount:    m.timer.PausedCount(),
+		PausedDuration: timer.FormatDuration(m.timer.TotalPausedDuration()),
+	}
+	h, err := history.Load(m.historyPath)
+	if err != nil {
+		logger.WithError(err).WithFields(map[string]interface{}{
+			"component":   "tui",
+			"event":       "history_load_error",
+			"session_id":  m.sessionID,
+			"history_path": m.historyPath,
+		}).Error("Failed to load history for session save")
+		return
+	}
+	h.AddSession(session)
+	if err := history.Save(h, m.historyPath); err != nil {
+		logger.WithError(err).WithFields(map[string]interface{}{
+			"component":   "tui",
+			"event":       "history_save_error",
+			"session_id":  m.sessionID,
+			"history_path": m.historyPath,
+		}).Error("Failed to save session to history")
+		return
+	}
+	logger.WithFields(map[string]interface{}{
+		"component":  "tui",
+		"event":      "session_saved_to_history",
+		"session_id": m.sessionID,
+		"end_status":  endStatus,
+	}).Info("Session saved to history")
 }
 
 // View renders the TUI

@@ -38,9 +38,9 @@ func SaveState(timer *Timer, sessionID string, path string) error {
 	remaining := timer.Remaining()
 
 	// Format durations as strings
-	durationStr := formatDuration(timer.duration)
-	remainingStr := formatDuration(remaining)
-	pausedDurationStr := formatDuration(timer.TotalPausedDuration())
+	durationStr := FormatDuration(timer.duration)
+	remainingStr := FormatDuration(remaining)
+	pausedDurationStr := FormatDuration(timer.TotalPausedDuration())
 
 	// Create state struct
 	state := TimerState{
@@ -185,8 +185,9 @@ func ResumeFromState(state *TimerState) (*Timer, error) {
 	return timer, nil
 }
 
-// formatDuration formats a time.Duration as a string (e.g., "25m", "1h30m")
-func formatDuration(d time.Duration) string {
+// FormatDuration formats a time.Duration as a string (e.g., "25m", "1h30m").
+// Used when building session history and persisted state.
+func FormatDuration(d time.Duration) string {
 	if d == 0 {
 		return "0s"
 	}

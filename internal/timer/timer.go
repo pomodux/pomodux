@@ -167,9 +167,9 @@ func FromState(state *TimerState) (*Timer, error) {
 // ToState converts a Timer to TimerState for persistence
 func (t *Timer) ToState(sessionID string) *TimerState {
 	remaining := t.Remaining()
-	durationStr := formatDuration(t.duration)
-	remainingStr := formatDuration(remaining)
-	pausedDurationStr := formatDuration(t.TotalPausedDuration())
+	durationStr := FormatDuration(t.duration)
+	remainingStr := FormatDuration(remaining)
+	pausedDurationStr := FormatDuration(t.TotalPausedDuration())
 
 	return &TimerState{
 		Version:        "1.0",
