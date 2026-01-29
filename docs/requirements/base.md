@@ -612,16 +612,17 @@
 ---
 
 #### NFR-REL-003: Config Validation
-**Requirement:** Invalid configuration must not prevent application start.
+**Requirement:** Config and theme load failure must prevent the timer from loading; no TUI is shown.
 
 **Requirements:**
 - Validate config schema on load
 - Log errors for invalid fields
-- Use default values for invalid/missing fields
-- Display warning message in TUI if config errors detected
-- Emit `ConfigurationLoaded` event even with partial config
+- Use default values for invalid/missing fields where applicable
+- On config load failure or theme resolution failure (e.g. unreadable config, unknown theme name): do not start TUI; timer does not load; return error to CLI and exit
+- No in-TUI config or theme error banner
+- Emit `ConfigurationLoaded` event even with partial config when load succeeds
 
-**Testing:** Provide malformed YAML, verify app starts with defaults
+**Testing:** Provide malformed YAML or unknown theme name; verify app does not start TUI and returns error
 
 ---
 

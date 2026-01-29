@@ -470,8 +470,8 @@ Window/Border (container)
 **Error State (Terminal Too Small):**
 - Terminal Size Warning (centered)
 
-**Error State (Config Errors):**
-- **Main Window:** Window + Config Error Banner + Session Header + Progress Bar + Time Display + Status Indicator + Action Selection
+**Config/Theme Load Failure:**
+- No TUI; timer does not load. Application returns error to CLI and exits. No in-TUI banner.
 
 ---
 

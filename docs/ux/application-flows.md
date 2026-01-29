@@ -300,10 +300,10 @@ This document defines all user journeys, task flows, screen flows, and error/edg
 ```mermaid
 flowchart TD
     Start[CLI Start Command] --> LoadConfig[Load Config]
-    LoadConfig --> ValidateConfig{Config Valid?}
-    ValidateConfig -->|Invalid| ConfigError[Config Error State]
+    LoadConfig --> ValidateConfig{Config/Theme OK?}
+    ValidateConfig -->|Invalid| FailStart[Return Error, No TUI]
     ValidateConfig -->|Valid| CreateTimer[Create Timer]
-    ConfigError --> CreateTimer
+    FailStart --> CLI[Return to CLI]
     CreateTimer --> StartTimer[Start Timer]
     StartTimer --> Running[Running State]
     
@@ -342,7 +342,8 @@ flowchart TD
 
 **Error States:**
 4. **Terminal Too Small** - Terminal below minimum size (80x24)
-5. **Config Errors** - Configuration validation errors
+
+**Note:** Config or theme load failure causes startup to fail (timer does not load); no TUI is shown.
 
 **Note:** Stopped state has no screen (immediate exit)
 
@@ -431,28 +432,20 @@ flowchart TD
 
 ---
 
-### Error Flow 4: Config File Errors
+### Error Flow 4: Config/Theme Load Failure
 
-**Scenario:** Config file is invalid YAML or has invalid values
+**Scenario:** Config file cannot be loaded (invalid YAML, unreadable) or theme cannot be resolved (e.g. unknown theme name)
 
 **Steps:**
-1. Application loads config file
-2. YAML parse fails OR validation fails
-3. Application logs warning (structured logging)
-4. Application uses defaults for invalid fields
-5. Application continues with partial config
-6. TUI displays warning banner (if config errors):
-   ```
-   ⚠ Config errors detected, using defaults
-   ```
-7. Timer starts normally with defaults
+1. Application attempts to load config file
+2. Load fails OR theme resolution fails
+3. Application does not start the timer or TUI
+4. Application returns an error to the CLI and exits
 
 **Error Handling:**
-- Graceful degradation (use defaults)
-- Warning displayed in TUI
-- Application continues operation
-
-**Wireframe Reference:** [Screen: Config Error State](screens.md#error-state-config-errors)
+- Config/theme errors cause the timer not to load
+- No TUI is shown; no in-TUI banner
+- User sees CLI error message and non-zero exit
 
 **Requirements References:**
 - [FR-CONFIG-001](../requirements/base.md#fr-config-001) - Config File Loading

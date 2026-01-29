@@ -346,53 +346,20 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 ---
 
-### Error State 2: Config Errors
+### Config/Theme Errors (No TUI)
 
-**Purpose:** Display configuration validation errors
-
-**Wireframe:**
-```
-┌─ Pomodux Timer ─────────────────────────────────────────────┐
-│                                                              │
-│  ⚠ Config errors detected, using defaults                   │ ← Config Error Banner
-│                                                              │
-│  Work Session: Implementing authentication                   │ ← Session Header
-│                                                              │
-│  ████████████████████████░░░░░░░░░░░░░  60%   15:23          │ ← Progress Bar + Time
-│                                                              │
-│  Status: RUNNING                                             │ ← Status Indicator
-│                                                              │
-│  [p]ause  [s]top                                             │ ← Action Selection (always visible)
-│                                                              │
-└──────────────────────────────────────────────────────────────┘ ← Window/Border (Main Window)
-```
-
-**Component Composition:**
-
-**Main Window (Persistent):**
-1. **Window/Border** - Same as Running
-2. **Config Error Banner** - Warning message at top (always visible)
-3. **Session Header** - Same as Running
-4. **Progress Bar** - Same as Running
-5. **Time Display** - Same as Running
-6. **Status Indicator** - Same as Running
-7. **Action Selection** - `[p]ause  [s]top` (always visible)
-
-**Display Conditions:**
-- Config file has validation errors
-- Invalid YAML or invalid values
-- Application uses defaults for invalid fields
+**Purpose:** Clarify that config or theme load errors prevent the TUI from starting.
 
 **Behavior:**
-- Warning banner always visible (cannot dismiss)
-- Timer continues normally with defaults
-- No blocking of functionality
+- Config load failure (e.g. invalid YAML, unreadable file) or theme resolution failure (e.g. unknown theme name) causes startup to fail.
+- The timer does not load; the TUI is not shown.
+- The application returns an error to the CLI and exits. No in-TUI banner or error state.
 
 **Requirements References:**
 - [NFR-REL-003](../requirements/base.md#nfr-rel-003) - Config Validation
 - [FR-CONFIG-001](../requirements/base.md#fr-config-001) - Config File Loading
 
-**Flow Reference:** [Error Flow 4: Config File Errors](application-flows.md#error-flow-4-config-file-errors)
+**Flow Reference:** [Error Flow 4: Config/Theme Load Failure](application-flows.md#error-flow-4-configtheme-load-failure)
 
 ---
 
@@ -456,7 +423,8 @@ This document provides complete screen wireframes for all states of the Pomodux 
 
 **Error States:**
 - Terminal too small: Terminal size < 80x24
-- Config errors: Config validation fails
+
+**Note:** Config or theme load errors prevent the TUI from starting (timer does not load); there is no TUI screen for that case.
 
 ### Exit Conditions
 
